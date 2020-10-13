@@ -186,7 +186,7 @@ predict.plasso_fit = function(plasso_fit,x,y,xnew=NULL,weights=FALSE) {
 
 xgboost_fit = function(x,y,args=list()) {
   
-  data = xgb.DMatrix(data = x, label = y) 
+  dx = xgb.DMatrix(data = x, label = y) 
   
   xgb = do.call(xgb.train, c(list(data = dx),args))
   

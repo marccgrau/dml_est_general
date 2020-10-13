@@ -3,7 +3,7 @@ hyperparam_xgboost = function(y, x, cvfold) {
   
   parameters_list = list()
   
-  for (i in 1:100){
+  for (i in 1:10){
     param <- list(booster = "gbtree",
                   objective = "reg:squarederror",
                   max_depth = sample(3:10, 1),
@@ -60,7 +60,9 @@ hyperparam_xgboost = function(y, x, cvfold) {
                        subsample = bestparams$subsample,
                        colsample_bytree = bestparams$colsample_bytree,
                        min_child_weight = bestparams$min_child_weight,
-                       lambda = bestparams$lambda)
+                       lambda = bestparams$lambda,
+                       nrounds= 300,
+                       eval_metric = "rmse")
   
   return(finalparams)
 }
