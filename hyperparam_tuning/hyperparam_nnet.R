@@ -1,4 +1,13 @@
-hyperparam_nnet = function(y_tr, x_tr, y_te, x_te) {
+hyperparam_nnet = function(y, x) {
+  
+  n = nrow(x)
+  fold = sample(seq_len(nrow(x)), size = n*0.75)
+  
+  x_tr = x[fold, ]
+  x_te = x[-fold, ]
+  
+  y_tr = y[fold ]
+  y_te = y[-fold]
   
   names_nn = colnames(as.data.frame(x_tr))
   train_nn = as.data.frame(cbind(y_tr, x_tr))
@@ -10,15 +19,18 @@ hyperparam_nnet = function(y_tr, x_tr, y_te, x_te) {
   
   params_nn = list(
     act.fct = c("tanh", "logistic"),
-    neurons = c(5:8),
-    threshold = c(0.02, 0.03),
+    algorithm = c("rprop+"),
+    neurons = c(4:6),
+    threshold = 0.8,
+    learningrate.limit = c(0.01, 0.02, 0.03),
     err.fct = "sse",
-    stepmax = 100000,
+    stepmax = 200000,
     linear.output = TRUE,
-    rep = c(1:3)
+    rep = c(1)
   )
   
   grid_frame_nn = expand.grid(params_nn)
+  lowest_error_list = list()
   
   for (row in 1:nrow(grid_frame_nn)) {
     nncv <- neuralnet(formula = nn_formula, 
@@ -29,10 +41,14 @@ hyperparam_nnet = function(y_tr, x_tr, y_te, x_te) {
                         linear.output = grid_frame_nn$linear.output[row],
                         err.fct = grid_frame_nn$err.fct[row],
                         threshold = grid_frame_nn$threshold[row],
-                        rep = grid_frame_nn$rep[row]
+                        learningrate = grid_frame_nn$learningrate[row],
+                        rep = grid_frame_nn$rep[row],
+                        algorithm = grid_frame_nn$algorithm[row],
+                        lifesign = "full",
+                        lifesign.step = 10000
     )
-    pred_nn = predict(nncv, newdata = test_X_nn)
-    lowest_error_list_Y_nn[[row]] = rmse_calc(test_Y_nn, preds_nn)
+    preds_nn = predict(nncv, newdata = test_X_nn)
+    lowest_error_list[[row]] = rmse_calc(test_Y_nn, preds_nn)
   }
   
   ### Create object that contains all accuracy's
@@ -50,7 +66,9 @@ hyperparam_nnet = function(y_tr, x_tr, y_te, x_te) {
                      linear.output = bestparams$linear.output,
                      err.fct = bestparams$err.fct,
                      threshold = bestparams$threshold,
-                     rep = bestparams$rep)
+                     learningrate = bestparams$learningrate,
+                     rep = bestparams$rep,
+                     algorithm = bestparams$algorithm)
   
   return(finalparams)
 }

@@ -2,8 +2,16 @@ hyperparam_xgboost = function(y, x, cvfold) {
   # implementation of a random search algorithm to find the best possible combination of hyperparameters for xgboost
   
   parameters_list = list()
+  n = nrow(x)
+  fold = sample(seq_len(nrow(x)), size = n*0.75)
   
-  for (i in 1:10){
+  x_tr = x[fold, ]
+  x_te = x[-fold, ]
+  
+  y_tr = y[fold ]
+  y_te = y[-fold]
+  
+  for (i in 1:100){
     param <- list(booster = "gbtree",
                   objective = "reg:squarederror",
                   max_depth = sample(3:10, 1),
@@ -20,8 +28,8 @@ hyperparam_xgboost = function(y, x, cvfold) {
   ### Create object that contains all randomly created hyperparameters
   params_df = do.call(rbind, parameters_list)
   
-  dt_cv = xgb.DMatrix(data = x[as.logical(cvfold), ], label = y[as.logical(cvfold)])
-  dval_cv = xgb.DMatrix(data = x[!cvfold, ], label = y[!cvfold])
+  dt_cv = xgb.DMatrix(data = x_tr, label = y_tr)
+  dval_cv = xgb.DMatrix(data = x_te, label = y_te)
   lowest_error_list = list()
   
   ### Use randomly created parameters to create 10,000 XGBoost-models
@@ -41,17 +49,17 @@ hyperparam_xgboost = function(y, x, cvfold) {
                         print_every_n = 100,
                         watchlist = list(train = dt_cv, val = dval_cv)
     )
-    lowest_error_list[[row]] <- as.data.frame(1 - min(model_cv$evaluation_log$train_rmse))
+    lowest_error_list[[row]] <- as.data.frame(min(model_cv$evaluation_log$val_rmse))
   }
   
-  ### Create object that contains all accuracy's
+  ### Create object that contains all rmse
   lowest_error_df = do.call(rbind, lowest_error_list)
   
-  ### Bind columns of accuracy values and random hyperparameter values
+  ### Bind columns of errors and random hyperparameter values
   randomsearch = cbind(lowest_error_df, params_df)
   
-  ### Quickly display highest accuracy
-  bestparams = randomsearch[which.max(randomsearch$`1 - min(model_cv$evaluation_log$train_rmse)`), ]
+  ### Quickly display lowest error
+  bestparams = randomsearch[which.min(randomsearch$`min(model_cv$evaluation_log$val_rmse)`), ]
   
   finalparams = list(booster = bestparams$booster, 
                        objective = bestparams$objective,

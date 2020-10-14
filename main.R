@@ -55,9 +55,9 @@ source("ensemble_method/utils_ensemble.R")
 n_simulations = 10                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
-n_covariates = 10                    # Number of confounders
-n_observations = 100000              # Number of observations in simulated dataset
-effect = 10                          # True value for effect
+n_covariates = 2                    # Number of confounders
+n_observations = 1000              # Number of observations in simulated dataset
+effect = 2                          # True value for effect
 beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
 
 ## Ensemble method
@@ -85,30 +85,30 @@ lambdas_ps = hyperparam_lasso(D_cv, X_cv)
 ## XGBoost hyperparameters
 ### following the idea of: https://towardsdatascience.com/getting-to-an-hyperparameter-tuned-xgboost-model-in-no-time-a9560f8eb54b
 ### Potential outcome: Random Search Algorithm
-params_xgb_oc = hyperparam_xgboost(Y_cv, X_cv, cvfold)
+params_xgb_oc = hyperparam_xgboost(Y_cv, X_cv, cv_folds)
 
 ### Propensity Score: Random Search Algorithm
-params_xgb_ps = hyperparam_xgboost(D_cv, X_cv, cvfold)
+params_xgb_ps = hyperparam_xgboost(D_cv, X_cv, cv_folds)
 
 
 ## Neural Network Hyperparameters
 ### Potential outcome: Grid search algorithm
-params_nn_oc = hyperparam_nnet(Y_cv_train, X_cv_train, Y_cv_test, X_cv_test)
+params_nn_oc = hyperparam_nnet(Y_cv, X_cv)
 
 ### Propensity score: Grid search algorithm
-params_nn_ps = hyperparam_nnet(D_cv_train, X_cv_train, D_cv_test, X_cv_test)
+params_nn_ps = hyperparam_nnet(D_cv, X_cv)
 
 
 # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
 # ML methods used for propensity score estimation
 lasso_bin_ps_1 = create_method("lasso", name = "Lasso ps 1", args = list(family = "binomial", lambda = lambdas_ps))
 xgb_ps_1 = create_method("xgboost", name = "XGBoost ps", args = params_xgb_ps)
-nnet_ps_1 = create_method("neural_net", name = "NeuralNet oc", args = list(hidden = c(5), linear.output = FALSE, stepmax = 20000, threshold = 0.4))
+nnet_ps_1 = create_method("neural_net", name = "NeuralNet oc", args = params_nn_ps)
 
 # ML methods used for potential outcome estimation
 lasso_oc_1 = create_method("lasso", name = "Lasso oc 1", args = list(family = "gaussian", lambdas_oc))
 xgb_oc_1 = create_method("xgboost", name = "XGBoost oc", args = params_xgb_oc)
-nnet_oc_1 = create_method("neural_net", name = "NeuralNet oc", args = list(hidden = c(5), linear.output = FALSE, stepmax = 20000, threshold = 0.4))
+nnet_oc_1 = create_method("neural_net", name = "NeuralNet oc", args = params_nn_oc)
 
 # list the respective methods for each ensemble
 ps_methods_1 = list(lasso_bin_ps_1, xgb_ps_1, nnet_ps_1)
