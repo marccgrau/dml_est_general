@@ -119,8 +119,6 @@ oc_methods_1 = list(lasso_oc_1, xgb_oc_1, nnet_oc_1)
 #theta_cf = rep(NA, k_folds)
 theta = rep(NA, n_simulations)
 
-oc_ensemble_cf = matrix(NA, k_folds, length(oc_methods_1))
-ps_ensemble_cf = matrix(NA, k_folds, length(ps_methods_1)) 
 oc_ensemble = matrix(NA, n_simulations, length(oc_methods_1))
 ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1)) 
 
@@ -133,13 +131,16 @@ for (j in 1:n_simulations) {
   X = data[[3]]
   n_obs = seq(1, nrow(X), 1)
   
-  # regress the residuals to get orthogonal scores
-  theta_est  = dml_est_cf(Y, D, X)
+  # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
+  dml_estimator  = dml_est_cf_ensemble(Y, D, X, ps_methods_1, oc_methods_1)
+  theta_est = dml_estimator$ate                   # extract the average treatment effect
+  weights_ensemble_ps = dml_estimator$w_ens_ps    # extract the ensemble weights for each ml method for the propensity score
+  weights_ensemble_oc = dml_estimator$w_ens_oc    # extract the ensemble weights for each ml method for the potential outcome
   
   # update list of estimates for current simulation round
-  theta[j] = theta_est                              # estimated effect theta in current simulation round
-  oc_ensemble[j,] = colMeans(oc_ensemble_cf)        # weights for the ml methods in the ensemble of the function E[Y|X]
-  ps_ensemble[j,] = colMeans(ps_ensemble_cf)        # weights for the ml methods in the ensemble of the function E[D|X]
+  theta[j] = theta_est                            # estimated effect theta in current simulation round
+  ps_ensemble[j,] = weights_ensemble_ps           # store weights of current simulation round
+  oc_ensemble[j,] = weights_ensemble_oc           # store weights of current simulation round
   
 }
 
