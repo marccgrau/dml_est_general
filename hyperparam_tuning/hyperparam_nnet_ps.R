@@ -18,14 +18,14 @@ hyperparam_nnet_ps = function(y, x) {
   nn_formula = as.formula(paste("Y ~", paste(names_nn, collapse = " + ")))
   
   params_nn = list(
-    act.fct = c("tanh", "logistic"),
+    act.fct = c("logistic"), # only use logistic activation function as we predict a probability
     algorithm = c("rprop+"),
     neurons = c(5:8),
     threshold = 0.01,
     learningrate.limit = c(0.01, 0.02, 0.03),
     err.fct = "sse",
     stepmax = 200000,
-    linear.output = TRUE,
+    linear.output = FALSE, # set to FALSE, such that act.fct. is applied to output --> between 0 and 1
     rep = c(1)
   )
   
@@ -61,7 +61,7 @@ hyperparam_nnet_ps = function(y, x) {
   bestparams = gridsearch[which.min(lowest_error_df), ]
   
   finalparams = list(act.fct = bestparams$act.fct, 
-                     hidden = bestparams$hidden,
+                     hidden = bestparams$neurons,
                      stepmax = bestparams$stepmax,
                      linear.output = bestparams$linear.output,
                      err.fct = bestparams$err.fct,

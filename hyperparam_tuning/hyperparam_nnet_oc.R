@@ -61,7 +61,7 @@ hyperparam_nnet_oc = function(y, x) {
   bestparams = gridsearch[which.min(lowest_error_df), ]
   
   finalparams = list(act.fct = bestparams$act.fct, 
-                     hidden = bestparams$hidden,
+                     hidden = bestparams$neurons,
                      stepmax = bestparams$stepmax,
                      linear.output = bestparams$linear.output,
                      err.fct = bestparams$err.fct,

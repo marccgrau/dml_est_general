@@ -111,7 +111,7 @@ predict.ridge_fit = function(ridge_fit,x,y,xnew=NULL,weights=FALSE) {
 
 lasso_fit = function(x,y,args=list()) {
   
-  lasso = do.call(cv.glmnet,c(list(x=x,y=y),args))
+  lasso = do.call(cv.glmnet,c(list(x=x,y=y),args = args))
   lasso
 }
 
@@ -208,20 +208,18 @@ predict.xgboost_fit = function(xgb_fit,x,y,xnew=NULL,weights=FALSE) {
 
 neural_net_fit = function(x,y,args=list()) {
   
-  scale_x = as.data.frame(scale(x, center = TRUE, scale = TRUE))
-  scale_y = as.data.frame(scale(y, center = TRUE, scale = TRUE))
-  unscale_mean_y = mean(y)
-  unscale_sd_y = sd(y)
+  x_nn = as.data.frame(x)
+  y_nn = as.data.frame(y)
   
-  colnames(scale_y) = c("Y1")
+  colnames(y_nn) = c("Y1")
   
-  tempdata = cbind(scale_y, scale_x)
+  tempdata = cbind(y_nn, x_nn)
   
-  nn_formula = as.formula(paste("Y1 ~", paste(colnames(scale_x), collapse = " + ")))
+  nn_formula = as.formula(paste("Y1 ~", paste(colnames(x_nn), collapse = " + ")))
   
   NNet = do.call(neuralnet, c(list(formula = nn_formula, data = tempdata), args))
   
-  list("model" = NNet, "unscale_mean" = unscale_mean_y, "unscale_sd" = unscale_sd_y)
+  list("model" = NNet)
 }
 
 
@@ -229,11 +227,9 @@ predict.neural_net_fit = function(neural_net_fit,x,y,xnew=NULL,weights=FALSE) {
   
   if (is.null(xnew)) xnew = x
   
-  scale_xnew = as.data.frame(scale(xnew, center = TRUE, scale = TRUE))
+  xnew_nn = as.data.frame(xnew)
   
-  preds = predict(neural_net_fit$model,newdata = scale_xnew)
+  preds = predict(neural_net_fit$model,newdata = xnew_nn)
   
-  fit = (preds + neural_net_fit$unscale_mean) * neural_net_fit$unscale_sd
-  
-  list("prediction"=fit, "weights" = "No weighted representation of the neural network available")
+  list("prediction"= preds, "weights" = "No weighted representation of the neural network available")
 }

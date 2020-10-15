@@ -10,5 +10,5 @@ hyperparam_lasso = function(y, x) {
   
   seq_lambda_final = if(lambda_cv - 0.05 < 0) {seq(0, lambda_cv + 0.05, 0.001)} else{seq(lambda_cv - 0.05, lambda_cv + 0.05, 0.001)}
   
-  return(seq_lambda_final)
+  return("lambda" = seq_lambda_final)
 }

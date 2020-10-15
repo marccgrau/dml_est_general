@@ -26,11 +26,11 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     p_hat_aux = matrix(NA, nrow(x), 2)
     
     p_hat_aux_ensemble = ensemble(ps_methods, x = x_main, y = d_main, xnew = x_aux)
-    p_hat_aux[,1] = p_hat_aux_ensemble$fit_full$predictions # predict the propensity score with main model, aux data
+    p_hat_aux[,1] = p_hat_aux_ensemble$ensemble # predict the propensity score with main model, aux data
     p_hat_aux[,2] = 1 - p_hat_aux[,1] # retrieve 1-p(x) for main model and aux data
     
     p_hat_main_ensemble = ensemble(ps_methods, x = x_aux, y = d_aux, xnew = x_main)
-    p_hat_main[,1] = p_hat_main_ensemble$fit_full$predictions # predict the propensity score with aux model, main data
+    p_hat_main[,1] = p_hat_main_ensemble$ensemble # predict the propensity score with aux model, main data
     p_hat_main[,2] = 1 - p_hat_main[,1] # retrieve 1-p(x) for aux model and main data
     
     # estimate the potential outcome 
@@ -39,10 +39,10 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     
     for (i in 1:2){
       y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1], xnew = x_aux)
-      y_hat_aux[,i] = y_hat_aux_ensemble$fit_full$predictions
+      y_hat_aux[,i] = y_hat_aux_ensemble$ensemble
       
       y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1], xnew = x_main)
-      y_hat_main[,i] = y_hat_main_ensemble$fit_full$predictions
+      y_hat_main[,i] = y_hat_main_ensemble$ensemble
     }
     
     # calculate efficient score E[(y - mu_hat)/p(x) + mu_hat]
@@ -78,8 +78,8 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     ate = mean(c(ate_main, ate_aux))
     
     # extract weights of ensemble
-    w_ens_ps = colMeans(rbind(p_hat_main_ensemble, p_hat_aux_ensemble))
-    w_ens_oc = colMeans(rbind(y_hat_main_ensemble, y_hat_aux_ensemble))
+    w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
+    w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
     
     return("ate" = ate, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc)
     

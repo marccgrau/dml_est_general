@@ -34,10 +34,12 @@ source("DGP/DGP1.R")
 source("DGP/DGP2.R")
 
 # Hyperparameter Tuning
-source("hyperparam_tuning/hyperparam_lasso.R")
-source("hyperparam_tuning/hyperparam_xgboost.R")
-source("hyperparam_tuning/hyperparam_nnet_oc.R")
+source("hyperparam_tuning/hyperparam_lasso_ps.R")
+source("hyperparam_tuning/hyperparam_lasso_oc.R")
+source("hyperparam_tuning/hyperparam_xgboost_ps.R")
+source("hyperparam_tuning/hyperparam_xgboost_oc.R")
 source("hyperparam_tuning/hyperparam_nnet_ps.R")
+source("hyperparam_tuning/hyperparam_nnet_oc.R")
 
 # DML estimator
 source("doubleML/dml_est.R")
@@ -79,41 +81,41 @@ X_cv = data_cv[[3]]
 ### Lasso hyperparameters are computationally less expensive to estimate
 ### Nontheless, the approximate region of the best lambda minimzing the deviance is determined before the Monte Carlo simulation
 ### Potential Outcome: Cross-validated lambda
-lambdas_oc = hyperparam_lasso(Y_cv, X_cv)
+params_lasso_oc = hyperparam_lasso_oc(Y_cv, X_cv)
 
 ### Propensity score: Cross-validated lambda
-lambdas_ps = hyperparam_lasso(D_cv, X_cv)
+params_lasso_ps = hyperparam_lasso_ps(D_cv, X_cv)
 
 ## XGBoost hyperparameters
 ### following the idea of: https://towardsdatascience.com/getting-to-an-hyperparameter-tuned-xgboost-model-in-no-time-a9560f8eb54b
 ### Potential outcome: Random Search Algorithm
-params_xgb_oc = hyperparam_xgboost(Y_cv, X_cv, cv_folds)
+params_xgb_oc = hyperparam_xgboost_oc(Y_cv, X_cv, cv_folds)
 
 ### Propensity Score: Random Search Algorithm
-params_xgb_ps = hyperparam_xgboost(D_cv, X_cv, cv_folds)
+params_xgb_ps = hyperparam_xgboost_ps(D_cv, X_cv, cv_folds)
 
 
 ## Neural Network Hyperparameters
 ### Potential outcome: Grid search algorithm
-params_nn_oc = hyperparam_nnet(Y_cv, X_cv)
+params_nn_oc = hyperparam_nnet_oc(Y_cv, X_cv)
 
 ### Propensity score: Grid search algorithm
-params_nn_ps = hyperparam_nnet(D_cv, X_cv)
+params_nn_ps = hyperparam_nnet_ps(D_cv, X_cv)
 
 
 # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
 # ML methods used for propensity score estimation
-lasso_bin_ps_1 = create_method("lasso", name = "Lasso ps 1", args = list(family = "binomial", lambda = lambdas_ps))
-xgb_ps_1 = create_method("xgboost", name = "XGBoost ps", args = params_xgb_ps)
-nnet_ps_1 = create_method("neural_net", name = "NeuralNet oc", args = params_nn_ps)
+lasso_ps_1 = create_method("lasso", name = "Lasso_ps_1", args = params_lasso_ps)
+xgb_ps_1 = create_method("xgboost", name = "XGBoost_ps_1", args = params_xgb_ps)
+nnet_ps_1 = create_method("neural_net", name = "NeuralNet_ps_1", args = params_nn_ps)
 
 # ML methods used for potential outcome estimation
-lasso_oc_1 = create_method("lasso", name = "Lasso oc 1", args = list(family = "gaussian", lambdas_oc))
-xgb_oc_1 = create_method("xgboost", name = "XGBoost oc", args = params_xgb_oc)
-nnet_oc_1 = create_method("neural_net", name = "NeuralNet oc", args = params_nn_oc)
+lasso_oc_1 = create_method("lasso", name = "Lasso_oc_1", args = params_lasso_oc)
+xgb_oc_1 = create_method("xgboost", name = "XGBoost_oc_1", args = params_xgb_oc)
+nnet_oc_1 = create_method("neural_net", name = "NeuralNet_oc_1", args = params_nn_oc)
 
 # list the respective methods for each ensemble
-ps_methods_1 = list(lasso_bin_ps_1, xgb_ps_1, nnet_ps_1)
+ps_methods_1 = list(lasso_ps_1, xgb_ps_1, nnet_ps_1)
 oc_methods_1 = list(lasso_oc_1, xgb_oc_1, nnet_oc_1)
 
 # create folds for cross-fitting
