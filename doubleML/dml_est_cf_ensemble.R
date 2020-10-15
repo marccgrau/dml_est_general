@@ -38,10 +38,10 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     y_hat_aux = matrix(NA, nrow(x), 2)
     
     for (i in 1:2){
-      y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1, ], xnew = x_aux)
+      y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1], xnew = x_aux)
       y_hat_aux[,i] = y_hat_aux_ensemble$fit_full$predictions
       
-      y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1, ], xnew = x_main)
+      y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1], xnew = x_main)
       y_hat_main[,i] = y_hat_main_ensemble$fit_full$predictions
     }
     

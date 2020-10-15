@@ -36,11 +36,13 @@ source("DGP/DGP2.R")
 # Hyperparameter Tuning
 source("hyperparam_tuning/hyperparam_lasso.R")
 source("hyperparam_tuning/hyperparam_xgboost.R")
-source("hyperparam_tuning/hyperparam_nnet.R")
+source("hyperparam_tuning/hyperparam_nnet_oc.R")
+source("hyperparam_tuning/hyperparam_nnet_ps.R")
 
 # DML estimator
 source("doubleML/dml_est.R")
 source("doubleML/dml_est_cf.R")
+source("doubleML/dml_est_cf_ensemble.R")
 
 # Ensemble learner
 source("ensemble_method/ensemble.R")
