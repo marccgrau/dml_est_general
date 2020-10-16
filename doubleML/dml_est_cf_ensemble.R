@@ -1,5 +1,5 @@
 dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
-  # Double Machine Learning estimator using the efficient score function as in Hahn 1998
+  # Double Machine Learning estimator using the efficient score function as introduced by Chernozhukov et al. (2018)
   # Implementation inspired by Knaus DML for multiple treatments https://github.com/MCKnaus/dmlmt 
   # check if the given treatment vector is binary
   binary <- all(d %in% 0:1)
@@ -25,12 +25,12 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     p_hat_main = matrix(NA, nrow(x), 2) # create empty matrix to store values
     p_hat_aux = matrix(NA, nrow(x), 2)
     
-    p_hat_aux_ensemble = ensemble(ps_methods, x = x_main, y = d_main, xnew = x_aux)
-    p_hat_aux[,1] = p_hat_aux_ensemble$ensemble # predict the propensity score with main model, aux data
+    p_hat_aux_ensemble = ensemble(ps_methods, x = x_main, y = d_main, xnew = x_aux) # predict the propensity score with main model, aux data
+    p_hat_aux[,1] = p_hat_aux_ensemble$ensemble # extract prediction values
     p_hat_aux[,2] = 1 - p_hat_aux[,1] # retrieve 1-p(x) for main model and aux data
     
-    p_hat_main_ensemble = ensemble(ps_methods, x = x_aux, y = d_aux, xnew = x_main)
-    p_hat_main[,1] = p_hat_main_ensemble$ensemble # predict the propensity score with aux model, main data
+    p_hat_main_ensemble = ensemble(ps_methods, x = x_aux, y = d_aux, xnew = x_main) # predict the propensity score with aux model, main data
+    p_hat_main[,1] = p_hat_main_ensemble$ensemble # extract prediction values
     p_hat_main[,2] = 1 - p_hat_main[,1] # retrieve 1-p(x) for aux model and main data
     
     # estimate the potential outcome 
@@ -38,15 +38,21 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     y_hat_aux = matrix(NA, nrow(x), 2)
     
     for (i in 1:2){
+      # only use either treated or non-treated as groups (i = 1,2)
+      # derive the model with the main data set and predict the outcomes with the auxiliary data set
+      # the prediction will be made with data of both treated and controls to receive potential outcomes
       y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1], xnew = x_aux)
       y_hat_aux[,i] = y_hat_aux_ensemble$ensemble
       
+      # same procedure as above but with switched data sets for cross-fitting purposes
       y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1], xnew = x_main)
       y_hat_main[,i] = y_hat_main_ensemble$ensemble
     }
     
     # calculate efficient score E[(y - mu_hat)/p(x) + mu_hat]
-    # this doubly robust estimator remains consistent with either p(x) or mu(x) misspecified
+    # both scores combined fulfill Neyman orthogonality condition
+    # this doubly robust estimator remains consistent with either p(x) or mu(x) not precisely specified
+    # see Chernozhukov et al (2018), Hahn (1998), Robins and Rotnitzky (1995)
     mu_mat_main = matrix(NA, nrow(x), 2)
     ipw_mat_main = matrix(NA, nrow(x), 2)
     
@@ -60,6 +66,7 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
       ipw_mat_aux[,i] = treatment_aux[,i] / p_hat_aux[,i]
     }
     
+    # finalize the score calculation
     for (i in 1:2){
       mu_mat_main[,i] = (y_main - y_hat_main[,i])*ipw_mat_main[,i] + y_hat_main[,i]
       
@@ -75,12 +82,14 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     ate_main = mean(psi_main)
     ate_aux = mean(psi_aux)
     
+    # get the cross-fitted average treatment effect
     ate = mean(c(ate_main, ate_aux))
     
     # extract weights of ensemble
     w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
     w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
     
+    # define single output
     output = list("ate" = ate, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc)
     
     return(output)

@@ -1,6 +1,10 @@
 hyperparam_xgboost_ps = function(y, x, cvfold) {
+  # propensity score
   # implementation of a random search algorithm to find the best possible combination of hyperparameters for xgboost
+  # to save computational resources the random search is preferable over the grid search algorithm
+  # especially in the case of many potential hyperparameters
   
+  # split into training and testing set for out of sample evaluation
   parameters_list = list()
   n = nrow(x)
   fold = sample(seq_len(nrow(x)), size = n*0.75)
@@ -11,9 +15,10 @@ hyperparam_xgboost_ps = function(y, x, cvfold) {
   y_tr = y[fold ]
   y_te = y[-fold]
   
+  # randomly pick parameter values within defined boundaries
   for (i in 1:100){
-    param <- list(booster = "gbtree",
-                  objective = "binary:logistic",
+    param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
+                  objective = "binary:logistic", # to be within [0,1]
                   max_depth = sample(3:10, 1),
                   eta = runif(1, .01, .3),
                   subsample = runif(1, .7, 1),
@@ -25,14 +30,15 @@ hyperparam_xgboost_ps = function(y, x, cvfold) {
     parameters_list[[i]] <- parameters
   }
   
-  ### Create object that contains all randomly created hyperparameters
+  # create dataframe of all randomly simulated parameter sets
   params_df = do.call(rbind, parameters_list)
   
+  # bring to xgb-format
   dt_cv = xgb.DMatrix(data = x_tr, label = y_tr)
   dval_cv = xgb.DMatrix(data = x_te, label = y_te)
   lowest_error_list = list()
   
-  ### Use randomly created parameters to create 10,000 XGBoost-models
+  # simulate for each parameter set an xgboost model
   for (row in 1:nrow(params_df)){
     model_cv <- xgb.train(data=dt_cv,
                           booster = "gbtree",
@@ -52,15 +58,16 @@ hyperparam_xgboost_ps = function(y, x, cvfold) {
     lowest_error_list[[row]] <- as.data.frame(min(model_cv$evaluation_log$val_rmse))
   }
   
-  ### Create object that contains all rmse
+  # extract the rmse of each parameter set
   lowest_error_df = do.call(rbind, lowest_error_list)
   
-  ### Bind columns of errors and random hyperparameter values
+  # associate each rmse with its parameter set
   randomsearch = cbind(lowest_error_df, params_df)
   
-  ### Quickly display lowest error
+  # extract lowest rmse parameter set
   bestparams = randomsearch[which.min(randomsearch$`min(model_cv$evaluation_log$val_rmse)`), ]
   
+  # output the best performing hyperparameters
   finalparams = list(booster = bestparams$booster, 
                      objective = bestparams$objective,
                      max_depth = bestparams$max_depth,

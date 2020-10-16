@@ -1,9 +1,16 @@
 #' Data Generating Process I
 #' Linear transformations M(.) and G(.)
+#' Simplest case
 #' 
 #' parameters necessary for data generating processes
 #' @param n_covariates number of covariates
-#'
+#' @param n_observations number of rows in each simulation round
+#' @param beta coefficients of controls
+#' 
+#' Output
+#' @param Y outcome variable
+#' @param D treatment variable
+#' @param X confounders
 
 DGP1 = function(n_covariates, n_observations, beta, effect) {
   

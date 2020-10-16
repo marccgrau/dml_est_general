@@ -1,13 +1,53 @@
-#' Starts the whole simulation and creates all graphical outputs
+#' Main file of master thesis
+#' sources all additional code
+#' starts the whole simulation and creates all graphical outputs
 #' 
 #' parameters necessary for Monte Carlo simulation
 #' @param n_simulations number of simulations for the Monte Carlo study
 #' 
 #' parameters necessary for data generating processes
 #' @param n_covariates number of covariates
+#' @param n_observations number of rows in each simulation round
+#' @param Y outcome variable
+#' @param D treatment variable
+#' @param X confounders
+#' @param beta coefficients of controls
 #'
-#' parameters necessary for DML estimator
-#' @param k_folds folds used for cross-fitting
+#' input parameters necessary for ensemble and DML
+#' @param cv_folds folds used for cross-fitting in ensemble
+#' @param oc_methods ml methods applied for outcome nuisance parameter
+#' @param ps_methods ml methods applied for propensity score parameter
+#' 
+#' hyperparameter tuning
+#' @param params_lasso definition of hyperparameters to use within simulation for lasso
+#' @param params_xgb definition of hyperparameters to use within simulation for xgboost
+#' @param params_nn definition of hyperparameters to use within simulation for neural network
+#' 
+#' Results
+#' @param theta vector of estimated average treatment effects of each simulation round
+#' @param avg_effect average of all thetas
+#' @param oc_ensemble_weights weights of each ml method used in ensemble for outcome nuisance parameter
+#' @param ps_ensemble_weights weights of each ml method used in ensemble for propensity score nuisance parameter
+#' 
+#' The main file calls every procedure necessary for the Monte Carlo Study. 
+#' It is separated into the following parts
+#' 1. Clean workspace, setwd, load all packages and functions
+#' 2. Definition of necessary parameters
+#' 3. Case 1
+#'     a. Evaluation of hyperparameters
+#'     b. Monte Carlo simulation
+#'     c. Storage of results
+#' 4. Case 2
+#'     a. Evaluation of hyperparameters
+#'     b. Monte Carlo simulation
+#'     c. Storage of results
+#' 5. Case 3
+#'     a. Evaluation of hyperparameters
+#'     b. Monte Carlo simulation
+#'     c. Storage of results
+#' 6. Results
+#'     a. Preparation/Processing
+#'     b. Graphical Illustration
 
 
 # Preliminaries -----------------------------------------------------------
@@ -43,8 +83,6 @@ source("hyperparam_tuning/hyperparam_nnet_ps.R")
 source("hyperparam_tuning/hyperparam_nnet_oc.R")
 
 # DML estimator
-source("doubleML/dml_est.R")
-source("doubleML/dml_est_cf.R")
 source("doubleML/dml_est_cf_ensemble.R")
 
 # Ensemble learner
@@ -61,7 +99,7 @@ n_simulations = 30                  # Number of simulation rounds for Monte Carl
 
 ## Data
 n_covariates = 2                    # Number of confounders
-n_observations = 1000              # Number of observations in simulated dataset
+n_observations = 1000               # Number of observations in simulated dataset
 effect = 2                          # True value for effect
 beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
 
@@ -73,7 +111,7 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
-data_cv = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+data_cv = DGP3(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]
@@ -151,7 +189,7 @@ for (j in 1:n_simulations) {
 
 # Averaging over all simulations
 # Average treatment effect
-avg_effect = mean(theta)                            # average effect over all simulation rounds
+avg_effect = mean(theta)                          # average effect over all simulation rounds
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))

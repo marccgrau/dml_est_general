@@ -1,11 +1,16 @@
-#' Data Generating Process I
-#' 
-#' parameters necessary for Monte Carlo simulation
-#' @param n_simulations number of simulations for the Monte Carlo study
+#' Data Generating Process II
+#' Non-linear form with polynomials
+#' medium complex case
 #' 
 #' parameters necessary for data generating processes
 #' @param n_covariates number of covariates
-#'
+#' @param n_observations number of rows in each simulation round
+#' @param beta coefficients of controls
+#' 
+#' Output
+#' @param Y outcome variable
+#' @param D treatment variable
+#' @param X confounders
 
 g_func = function(X){
   for (i in 1:ncol(X)){

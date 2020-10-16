@@ -1,5 +1,8 @@
 hyperparam_nnet_ps = function(y, x) {
+  # propensity score
+  # hyperparameter tuning for neural network
   
+  # split data for out of sample evaluation
   n = nrow(x)
   fold = sample(seq_len(nrow(x)), size = n*0.75)
   
@@ -9,16 +12,19 @@ hyperparam_nnet_ps = function(y, x) {
   y_tr = y[fold ]
   y_te = y[-fold]
   
+  # define optimal data types for implementation of neuralnet()
   names_nn = colnames(as.data.frame(x_tr))
   train_nn = as.data.frame(cbind(y_tr, x_tr))
   test_X_nn = as.data.frame(x_te)
   test_Y_nn = as.data.frame(y_te)
   
+  #define neural network formula
   colnames(train_nn) = c("Y", names_nn)
   nn_formula = as.formula(paste("Y ~", paste(names_nn, collapse = " + ")))
   
+  # define set of possible hyperparameters
   params_nn = list(
-    act.fct = c("logistic"), # only use logistic activation function as we predict a probability
+    act.fct = c("logistic"), # only use logistic activation function as we predict a probability [0,1]
     algorithm = c("rprop+"),
     neurons = c(5:8),
     threshold = 0.01,
@@ -29,9 +35,11 @@ hyperparam_nnet_ps = function(y, x) {
     rep = c(1)
   )
   
+  # expand the grid according to defined hyperparameters
   grid_frame_nn = expand.grid(params_nn)
   lowest_error_list = list()
   
+  # calculate a neural network for each set of hyperparameters as defined in the grid
   for (row in 1:nrow(grid_frame_nn)) {
     nncv <- neuralnet(formula = nn_formula, 
                       data=train_nn,
@@ -51,15 +59,16 @@ hyperparam_nnet_ps = function(y, x) {
     lowest_error_list[[row]] = rmse_calc(test_Y_nn, preds_nn)
   }
   
-  ### Create object that contains all accuracy's
+  # retrieve the rmse of each trained network 
   lowest_error_df = do.call(rbind, lowest_error_list)
   
-  ### Bind columns of accuracy values and random hyperparameter values
+  # combine the errors with the respective parameter set
   gridsearch = cbind(lowest_error_df, grid_frame_nn)
   
-  ### Quickly display highest accuracy
+  # evaluate best performing set
   bestparams = gridsearch[which.min(lowest_error_df), ]
   
+  # output the best hyperparameter set
   finalparams = list(act.fct = bestparams$act.fct, 
                      hidden = bestparams$neurons,
                      stepmax = bestparams$stepmax,
