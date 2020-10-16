@@ -7,7 +7,7 @@
 #' @param n_covariates number of covariates
 #'
 
-DGP1 = function(n_simulations, n_covariates, n_observations, beta, effect) {
+DGP1 = function(n_covariates, n_observations, beta, effect) {
   
   # construct the correlation matrix
   init_matrix = matrix(rnorm(n_covariates*n_covariates,mean=0,sd=1), n_covariates, n_covariates)

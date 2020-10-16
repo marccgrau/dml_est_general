@@ -81,7 +81,9 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
     w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
     
-    return("ate" = ate, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc)
+    output = list("ate" = ate, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc)
+    
+    return(output)
     
   } else {
     print("Non-binary treatments, please check your data")

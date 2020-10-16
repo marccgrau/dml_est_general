@@ -23,7 +23,7 @@ directory_path <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(directory_path)
 
 rm(list = ls())
-set.seed(123)
+set.seed(12345)
 
 ## Load source functions
 # General Functions
@@ -56,7 +56,7 @@ source("ensemble_method/utils_ensemble.R")
 
 ### Define necessary parameters
 ## Monte Carlo Simulation
-n_simulations = 10                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 60                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 2                    # Number of confounders
@@ -72,7 +72,7 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
-data_cv = DGP1(n_simulations = n_simulations,n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+data_cv = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]
@@ -129,7 +129,7 @@ ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1))
 for (j in 1:n_simulations) {
   
   # simulate data
-  data = DGP1(n_simulations = n_simulations,n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+  data = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -154,24 +154,24 @@ avg_effect = mean(theta)                            # average effect over all si
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))
-for (i in 1:length(oc_methods)) {
-  if (!is.null(oc_methods[[i]]$name)) colnames(oc_ensemble_weights)[i] = oc_methods[[i]]$name
+for (i in 1:length(oc_methods_1)) {
+  if (!is.null(oc_methods_1[[i]]$name)) colnames(oc_ensemble_weights)[i] = oc_methods_1[[i]]$name
   oc_ensemble = as.data.frame(oc_ensemble)
-  colnames(oc_ensemble)[i] = oc_methods[[i]]$name
+  colnames(oc_ensemble)[i] = oc_methods_1[[i]]$name
 }
 
 
 # Ensemble weights of E[D|X]
 ps_ensemble_weights = as.data.frame(t(colMeans(ps_ensemble)))
-for (i in 1:length(ps_methods)) {
-  if (!is.null(ps_methods[[i]]$name)) colnames(ps_ensemble_weights)[i] = ps_methods[[i]]$name
+for (i in 1:length(ps_methods_1)) {
+  if (!is.null(ps_methods_1[[i]]$name)) colnames(ps_ensemble_weights)[i] = ps_methods_1[[i]]$name
   ps_ensemble = as.data.frame(ps_ensemble)
-  colnames(ps_ensemble)[i] = ps_methods[[i]]$name
+  colnames(ps_ensemble)[i] = ps_methods_1[[i]]$name
 }
 
 # Print the results
 paste("Average treatment effect:", round(avg_effect, 3))
 paste(sprintf("Ensemble weight E[Y|X] %s:",colnames(oc_ensemble_weights)), round(oc_ensemble_weights, 3))
-paste(sprintf("Ensemble weight E[Y|X] %s:",colnames(ps_ensemble_weights)), round(ps_ensemble_weights, 3))
+paste(sprintf("Ensemble weight E[D|X] %s:",colnames(ps_ensemble_weights)), round(ps_ensemble_weights, 3))
 
 
