@@ -1,7 +1,5 @@
 #' Data Generating Process I
-#' 
-#' parameters necessary for Monte Carlo simulation
-#' @param n_simulations number of simulations for the Monte Carlo study
+#' Linear transformations M(.) and G(.)
 #' 
 #' parameters necessary for data generating processes
 #' @param n_covariates number of covariates

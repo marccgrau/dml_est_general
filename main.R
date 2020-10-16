@@ -32,6 +32,7 @@ source("general_functions/general_utils.R")
 # DGPs
 source("DGP/DGP1.R")
 source("DGP/DGP2.R")
+source("DGP/DGP3.R")
 
 # Hyperparameter Tuning
 source("hyperparam_tuning/hyperparam_lasso_ps.R")
@@ -56,7 +57,7 @@ source("ensemble_method/utils_ensemble.R")
 
 ### Define necessary parameters
 ## Monte Carlo Simulation
-n_simulations = 60                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 30                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 2                    # Number of confounders

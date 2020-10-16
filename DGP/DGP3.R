@@ -8,18 +8,14 @@
 #'
 
 g_func = function(X){
-  for (i in 1:ncol(X)){
-    X[,i] = X[,i]^(i)
-  }
+  sin(X)
 }
 
 m_func = function(X, nu = 0, gamma = 1) {
-  for (i in 1:ncol(X)){
-  X[,i] = X[,i]^(sample(1:5,1,TRUE))
-  }
+  0.5/pi*(sinh(gamma)) / (cosh(gamma) - cos(X - nu))
 }
 
-DGP2 = function(n_covariates, n_observations, beta, effect) {
+DGP3 = function(n_covariates, n_observations, beta, effect) {
   
   # construct the correlation matrix
   init_matrix = matrix( rnorm(n_covariates*n_covariates,mean=0,sd=1), n_covariates, n_covariates)
