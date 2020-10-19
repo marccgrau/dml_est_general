@@ -71,8 +71,11 @@ source("general_functions/general_utils.R")
 
 # DGPs
 source("DGP/DGP1.R")
+source("DGP/DGP1_bounded.R")
 source("DGP/DGP2.R")
+source("DGP/DGP2_bounded.R")
 source("DGP/DGP3.R")
+source("DGP/DGP3_bounded.R")
 
 # Hyperparameter Tuning
 source("hyperparam_tuning/hyperparam_lasso_ps.R")
