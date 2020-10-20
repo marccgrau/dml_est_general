@@ -98,10 +98,10 @@ source("ensemble_method/utils_ensemble.R")
 
 ### Define necessary parameters
 ## Monte Carlo Simulation
-n_simulations = 30                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 3                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
-n_covariates = 2                    # Number of confounders
+n_covariates = 5                    # Number of confounders
 n_observations = 1000               # Number of observations in simulated dataset
 effect = 2                          # True value for effect
 beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
@@ -190,13 +190,14 @@ for (j in 1:n_simulations) {
   weights_ensemble_oc = dml_estimator$w_ens_oc    # extract the ensemble weights for each ml method for the potential outcome
   
   # update list of estimates for current simulation round
-  theta_ens[j] = theta_est                        # estimated effect theta in current simulation round
+  theta_ens[j] = theta_est_ens                        # estimated effect theta in current simulation round
   theta_lasso[j] = theta_est_lasso
   theta_xgb[j] = theta_est_xgb
   theta_nn[j] = theta_est_nn
   ps_ensemble[j,] = weights_ensemble_ps           # store weights of current simulation round
   oc_ensemble[j,] = weights_ensemble_oc           # store weights of current simulation round
   
+  print(paste("Simulation round", j))
 }
 
 # Averaging over all simulations
@@ -222,9 +223,9 @@ for (i in 1:length(ps_methods_1)) {
   ps_ensemble = as.data.frame(ps_ensemble)
   colnames(ps_ensemble)[i] = ps_methods_1[[i]]$name
 }
- 
+
 # Print the results
-paste("Average treatment effect:", round(avg_effect, 3))
+paste("Average treatment effect:", round(avg_effect_ens, 3))
 paste(sprintf("Ensemble weight E[Y|X] %s:",colnames(oc_ensemble_weights)), round(oc_ensemble_weights, 3))
 paste(sprintf("Ensemble weight E[D|X] %s:",colnames(ps_ensemble_weights)), round(ps_ensemble_weights, 3))
 

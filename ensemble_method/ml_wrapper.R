@@ -125,6 +125,35 @@ predict.lasso_fit = function(lasso_fit,x,y,xnew=NULL,weights=FALSE) {
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }
 
+# Cross-validated LASSO regression for binomial dependent variables ----------------------------------------
+
+#' This function estimates cross-validated lasso regression based on the \code{\link{glmnet}} package
+#'
+#' @param x Matrix of covariates (number of observations times number of covariates matrix)
+#' @param y vector of outcomes
+#' @param w vector of weights
+#' @param ... Pass \code{\link{glmnet}} options
+#' @import glmnet
+#'
+#' @return An object with S3 class "glmnet"
+#' @export
+
+lasso_bin_fit = function(x,y,args=list()) {
+  
+  lasso_bin = do.call(cv.glmnet,c(list(x=x,y=y),args = args))
+  lasso_bin
+}
+
+predict.lasso_bin_fit = function(lasso__bin_fit,x,y,xnew=NULL,weights=FALSE) {
+  
+  if (isTRUE(weights)) stop("No weighted representation of Lasso available.")
+  if (is.null(xnew)) xnew = x
+  
+  fit = predict(lasso_bin_fit,newx=xnew,type="response",s="lambda.min")
+  
+  list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
+}
+
 # Random Forest -----------------------------------------------------------
 
 forest_grf_fit = function(x,y,args=list()) {

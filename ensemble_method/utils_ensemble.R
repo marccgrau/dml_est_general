@@ -2,8 +2,8 @@
 create_method = function(method,x_select=NULL,args=list(),name=NULL) {
   
   if (!(is.character(method) & length(method) == 1)) stop("Provide single string to define method.")
-  if (!(any(method == c("mean","ols","ridge","plasso","forest_grf","lasso",
-                        "elastic_net", "xgboost", "neural_net")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\",\"forest_grf\",\"xgboost\",\"neural_net\").")
+  if (!(any(method == c("mean","ols","ridge","plasso","forest_grf","lasso", "lasso_bin",
+                        "elastic_net", "xgboost", "neural_net")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\", \"lasso_bin\",\"forest_grf\",\"xgboost\",\"neural_net\").")
   if (!(is.null(args) | is.list(args))) stop("Provide either NULL or list for args.")
   if (!(is.null(x_select) | is.logical(x_select))) stop("Provide either NULL or logical for x_select.")
   if (!((is.character(name) & length(name) == 1) | is.null(name))) stop("Provide single string to name method.")

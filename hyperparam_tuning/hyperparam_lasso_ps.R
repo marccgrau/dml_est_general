@@ -13,7 +13,7 @@ hyperparam_lasso_ps = function(y, x) {
   # construct sequence around optimal lambda
   seq_lambda_final = if(lambda_cv - 0.05 < 0) {seq(0, lambda_cv + 0.05, 0.001)} else{seq(lambda_cv - 0.05, lambda_cv + 0.05, 0.001)}
   
-  args = list("lambda" = seq_lambda_final, "family" = "binomial", "alpha" = 1)
+  args = list("lambda" = seq_lambda_final, "family" = "binomial", "alpha" = 1, "type.measure" = "mse")
   
   return(args)
 }

@@ -26,11 +26,11 @@ hyperparam_nnet_oc = function(y, x) {
   params_nn = list(
     act.fct = c("tanh", "logistic"),
     algorithm = c("rprop+"),
-    neurons = c(4:6),
-    threshold = 0.8,
-    learningrate.limit = c(0.01, 0.02, 0.03),
+    neurons = c(5:7),
+    threshold = 1.2,
+    learningrate.factor = c(0.05, 0.001),
     err.fct = "sse",
-    stepmax = 200000,
+    stepmax = 500000,
     linear.output = TRUE,
     rep = c(1)
   )

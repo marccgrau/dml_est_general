@@ -123,7 +123,7 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
       ipw_mat_main_xgb[,i] = treatment_main[,i] / p_hat_main_xgb[,i]
       ipw_mat_main_nn[,i] = treatment_main[,i] / p_hat_main_nn[,i]
       # ensemble prediction switched data sets
-      ipw_mat_aux_ens[,i] = treatment_aux_ens[,i] / p_hat_aux_ens[,i]
+      ipw_mat_aux_ens[,i] = treatment_aux[,i] / p_hat_aux_ens[,i]
       # predictions of each ml method
       ipw_mat_aux_lasso[,i] = treatment_aux[,i] / p_hat_aux_lasso[,i]
       ipw_mat_aux_xgb[,i] = treatment_aux[,i] / p_hat_aux_xgb[,i]
