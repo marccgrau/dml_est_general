@@ -114,7 +114,7 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
-data_cv = DGP3(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+data_cv = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]
@@ -163,7 +163,10 @@ oc_methods_1 = list(lasso_oc_1, xgb_oc_1, nnet_oc_1)
 # create folds for cross-fitting
 
 #theta_cf = rep(NA, k_folds)
-theta = rep(NA, n_simulations)
+theta_ens = rep(NA, n_simulations)
+theta_lasso = rep(NA, n_simulations)
+theta_xgb = rep(NA, n_simulations)
+theta_nn = rep(NA, n_simulations)
 
 oc_ensemble = matrix(NA, n_simulations, length(oc_methods_1))
 ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1)) 
@@ -179,12 +182,18 @@ for (j in 1:n_simulations) {
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
   dml_estimator  = dml_est_cf_ensemble(Y, D, X, ps_methods_1, oc_methods_1)
-  theta_est = dml_estimator$ate                   # extract the average treatment effect
+  theta_est_ens = dml_estimator$ate_ens           # extract the average treatment effect determined by the ensemble
+  theta_est_lasso = dml_estimator$ate_lasso
+  theta_est_xgb = dml_estimator$ate_xgb
+  theta_est_nn = dml_estimator$ate_nn
   weights_ensemble_ps = dml_estimator$w_ens_ps    # extract the ensemble weights for each ml method for the propensity score
   weights_ensemble_oc = dml_estimator$w_ens_oc    # extract the ensemble weights for each ml method for the potential outcome
   
   # update list of estimates for current simulation round
-  theta[j] = theta_est                            # estimated effect theta in current simulation round
+  theta_ens[j] = theta_est                        # estimated effect theta in current simulation round
+  theta_lasso[j] = theta_est_lasso
+  theta_xgb[j] = theta_est_xgb
+  theta_nn[j] = theta_est_nn
   ps_ensemble[j,] = weights_ensemble_ps           # store weights of current simulation round
   oc_ensemble[j,] = weights_ensemble_oc           # store weights of current simulation round
   
@@ -192,7 +201,10 @@ for (j in 1:n_simulations) {
 
 # Averaging over all simulations
 # Average treatment effect
-avg_effect = mean(theta)                          # average effect over all simulation rounds
+avg_effect_ens = mean(theta_ens)                          # average effect over all simulation rounds
+avg_effect_lasso = mean(theta_lasso)
+avg_effect_xgb = mean(theta_xgb)
+avg_effect_nn = mean(theta_nn)
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))
@@ -210,7 +222,7 @@ for (i in 1:length(ps_methods_1)) {
   ps_ensemble = as.data.frame(ps_ensemble)
   colnames(ps_ensemble)[i] = ps_methods_1[[i]]$name
 }
-
+ 
 # Print the results
 paste("Average treatment effect:", round(avg_effect, 3))
 paste(sprintf("Ensemble weight E[Y|X] %s:",colnames(oc_ensemble_weights)), round(oc_ensemble_weights, 3))

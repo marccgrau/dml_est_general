@@ -28,7 +28,7 @@ DGP3 = function(n_covariates, n_observations, beta, effect) {
   corr_matrix = t(chol(cov_matrix))
   
   # simulate data
-  random.normal = matrix(rnorm(n_covariates*n_observations,1,2), nrow=n_covariates, ncol=n_observations)
+  random.normal = matrix(rnorm(n_covariates*n_observations,0,1), nrow=n_covariates, ncol=n_observations)
   init_X = corr_matrix %*% random.normal
   X = t(init_X)
   
@@ -51,4 +51,3 @@ DGP3 = function(n_covariates, n_observations, beta, effect) {
   
   return(list(Y, D, X))
 }
-
