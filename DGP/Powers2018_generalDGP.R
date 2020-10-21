@@ -15,7 +15,7 @@
 
 generalDGP = function(n_covariates, n_observations, mufunc, taufunc, sigma, ps_given = NULL) {
   
-  if (ps_given = NULL){
+  if (is.null(ps_given)){
     X = matrix(NA, nrow = n_observations, ncol = n_covariates)
     
     for (i in 1:n_covariates){

@@ -73,12 +73,6 @@ source("general_functions/general_utils.R")
 source("DGP/Powers2018_nuisancefunctions.R")
 source("DGP/Powers2018_DGPfunctions.R")
 source("DGP/Powers2018_generalDGP.R")
-source("DGP/DGP1.R")
-source("DGP/DGP1_bounded.R")
-source("DGP/DGP2.R")
-source("DGP/DGP2_bounded.R")
-source("DGP/DGP3.R")
-source("DGP/DGP3_bounded.R")
 
 # Hyperparameter Tuning
 source("hyperparam_tuning/hyperparam_lasso_ps.R")
@@ -118,7 +112,7 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
 # Using the general DGP of Powers et al. (2018)
-data_cv = generalDGP(n_covariates, n_observations, f3, f5, 1)
+data_cv = generalDGP(n_covariates, n_observations, f3, f5, 1, ps_given = 0.5)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]
@@ -259,5 +253,20 @@ paste(sprintf("Ensemble weight E[D|X] %s:",colnames(ps_ensemble_weights)), round
 
 
 # Simulation 2: Interaction Case ------------------------------------------
+
+# This DGP allows for higher order effects up to degree 3 and Interaction Terms
+# The higher order effects should be best captured by tree based methods 
+# For f4 only bernoulli distributed features are used. These are combined in all possible ways
+# f6 uses indicator functions which interact with each other
+
+# Hyperparameter Tuning for DGP 2
+## Data simulation for cross-validation of ml methods to select hyperparameters
+# Using the general DGP of Powers et al. (2018)
+data_cv = generalDGP(n_covariates, n_observations, f4, f6, 1, ps_given = 0.5)
+Y_cv = data_cv[[1]]
+D_cv = data_cv[[2]]
+X_cv = data_cv[[3]]
+
+
 
 
