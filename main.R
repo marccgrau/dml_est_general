@@ -70,6 +70,9 @@ set.seed(12345)
 source("general_functions/general_utils.R")
 
 # DGPs
+source("DGP/Powers2018_nuisancefunctions.R")
+source("DGP/Powers2018_DGPfunctions.R")
+source("DGP/Powers2018_generalDGP.R")
 source("DGP/DGP1.R")
 source("DGP/DGP1_bounded.R")
 source("DGP/DGP2.R")
@@ -101,7 +104,7 @@ source("ensemble_method/utils_ensemble.R")
 n_simulations = 3                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
-n_covariates = 5                    # Number of confounders
+n_covariates = 10                    # Number of confounders
 n_observations = 1000               # Number of observations in simulated dataset
 effect = 2                          # True value for effect
 beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
@@ -114,7 +117,8 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
-data_cv = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+# Using the general DGP of Powers et al. (2018)
+data_cv = generalDGP(n_covariates, n_observations, f3, f5, 1)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]
@@ -160,21 +164,36 @@ nnet_oc_1 = create_method("neural_net", name = "NeuralNet_oc_1", args = params_n
 ps_methods_1 = list(lasso_ps_1, xgb_ps_1, nnet_ps_1)
 oc_methods_1 = list(lasso_oc_1, xgb_oc_1, nnet_oc_1)
 
-# create folds for cross-fitting
+# create empty matrices to fill throughout the simulation
+ate_ens = rep(NA, n_simulations)
+ate_lasso = rep(NA, n_simulations)
+ate_xgb = rep(NA, n_simulations)
+ate_nn = rep(NA, n_simulations)
 
-#theta_cf = rep(NA, k_folds)
-theta_ens = rep(NA, n_simulations)
-theta_lasso = rep(NA, n_simulations)
-theta_xgb = rep(NA, n_simulations)
-theta_nn = rep(NA, n_simulations)
+te_ens = matrix(NA, n_observations, n_simulations)
+te_lasso = matrix(NA, n_observations, n_simulations)
+te_xgb = matrix(NA, n_observations, n_simulations)
+te_nn = matrix(NA, n_observations, n_simulations)
+
+se_po_ens = matrix(NA, n_simulations, 2)
+se_po_lasso = matrix(NA, n_simulations, 2)
+se_po_xgb = matrix(NA, n_simulations, 2)
+se_po_nn = matrix(NA, n_simulations, 2)
+
+se_te_ens = rep(NA, n_simulations)
+se_te_lasso = rep(NA, n_simulations)
+se_te_xgb = rep(NA, n_simulations)
+se_te_nn = rep(NA, n_simulations)
 
 oc_ensemble = matrix(NA, n_simulations, length(oc_methods_1))
 ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1)) 
 
+
+
 for (j in 1:n_simulations) {
   
   # simulate data
-  data = DGP1(n_covariates = n_covariates, n_observations = n_observations, beta = beta, effect = effect)
+  data = generalDGP(n_covariates, n_observations, f3, f5, 1)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -182,30 +201,36 @@ for (j in 1:n_simulations) {
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
   dml_estimator  = dml_est_cf_ensemble(Y, D, X, ps_methods_1, oc_methods_1)
-  theta_est_ens = dml_estimator$ate_ens           # extract the average treatment effect determined by the ensemble
-  theta_est_lasso = dml_estimator$ate_lasso
-  theta_est_xgb = dml_estimator$ate_xgb
-  theta_est_nn = dml_estimator$ate_nn
-  weights_ensemble_ps = dml_estimator$w_ens_ps    # extract the ensemble weights for each ml method for the propensity score
-  weights_ensemble_oc = dml_estimator$w_ens_oc    # extract the ensemble weights for each ml method for the potential outcome
   
   # update list of estimates for current simulation round
-  theta_ens[j] = theta_est_ens                        # estimated effect theta in current simulation round
-  theta_lasso[j] = theta_est_lasso
-  theta_xgb[j] = theta_est_xgb
-  theta_nn[j] = theta_est_nn
-  ps_ensemble[j,] = weights_ensemble_ps           # store weights of current simulation round
-  oc_ensemble[j,] = weights_ensemble_oc           # store weights of current simulation round
+  ate_ens[j] = dml_estimator$ate_ens                      # estimated effect theta in current simulation round
+  ate_lasso[j] = dml_estimator$ate_lasso
+  ate_xgb[j] = dml_estimator$ate_xgb
+  ate_nn[j] = dml_estimator$ate_nn
+  te_ens[,j] = dml_estimator$te_ens
+  te_lasso[,j] = dml_estimator$te_lasso
+  te_xgb[,j] = dml_estimator$te_xgb
+  te_nn[,j] = dml_estimator$te_nn
+  se_po_ens[j,] = dml_estimator$se_mu[1,]
+  se_po_lasso[j,] = dml_estimator$se_mu[2,]
+  se_po_xgb[j,] = dml_estimator$se_mu[3,]
+  se_po_nn[j,] = dml_estimator$se_mu[4,]
+  se_te_ens[j] = dml_estimator$se_te[1]
+  se_te_lasso[j] = dml_estimator$se_te[2]
+  se_te_xgb[j] = dml_estimator$se_te[3]
+  se_te_nn[j] = dml_estimator$se_te[4]
+  ps_ensemble[j,] = dml_estimator$w_ens_ps           # store weights of current simulation round
+  oc_ensemble[j,] = dml_estimator$w_ens_oc          # store weights of current simulation round
   
   print(paste("Simulation round", j))
 }
 
 # Averaging over all simulations
 # Average treatment effect
-avg_effect_ens = mean(theta_ens)                          # average effect over all simulation rounds
-avg_effect_lasso = mean(theta_lasso)
-avg_effect_xgb = mean(theta_xgb)
-avg_effect_nn = mean(theta_nn)
+avg_effect_ens = mean(ate_ens)                          # average effect over all simulation rounds
+avg_effect_lasso = mean(ate_lasso)
+avg_effect_xgb = mean(ate_xgb)
+avg_effect_nn = mean(ate_nn)
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))

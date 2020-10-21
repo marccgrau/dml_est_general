@@ -146,42 +146,61 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
       mu_mat_aux_nn[,i] = (y_aux - y_hat_aux_nn[,i])*ipw_mat_aux_nn[,i] + y_hat_aux_nn[,i]
     }
     
-    # calculate psi(D, theta, eta) = (g(1,X) - g(0,X)) + D(Y - g(1,X))/p(x) + (1-D)(Y - g(0,X))/(1-p(x)) - theta
+    # calculate standard errors SE
+    se_mu = matrix(NA, nrow = (length(oc_methods) + 1), ncol = ncol(mu_mat_main_ens))
+
+    for (i in 1:ncol(mu_mat_main_ens)){
+      se_mu[1,i] = sqrt(sum((rowMeans(cbind(mu_mat_main_ens[,i], mu_mat_aux_ens[,i])) - mean(rowMeans(cbind(mu_mat_main_ens[,i], mu_mat_aux_ens[,i]))))^2) / length(mu_mat_main_ens[,i]))
+      se_mu[2,i] = sqrt(sum((rowMeans(cbind(mu_mat_main_lasso[,i], mu_mat_aux_lasso[,i])) - mean(rowMeans(cbind(mu_mat_main_lasso[,i], mu_mat_aux_lasso[,i]))))^2) / length(mu_mat_main_lasso[,i]))
+      se_mu[3,i] = sqrt(sum((rowMeans(cbind(mu_mat_main_xgb[,i], mu_mat_aux_xgb[,i])) - mean(rowMeans(cbind(mu_mat_main_xgb[,i], mu_mat_aux_xgb[,i]))))^2) / length(mu_mat_main_lasso[,i]))
+      se_mu[4,i] = sqrt(sum((rowMeans(cbind(mu_mat_main_nn[,i], mu_mat_aux_nn[,i])) - mean(rowMeans(cbind(mu_mat_main_nn[,i], mu_mat_aux_nn[,i]))))^2) / length(mu_mat_main_lasso[,i]))
+    }
+    
+    colnames(se_mu) = c("mu_1", "mu_0")
+    rownames(se_mu) = c("ensemble", "lasso", "xgb", "nn")
+    
+    
+    # calculate te(D, theta, eta) = (g(1,X) - g(0,X)) + D(Y - g(1,X))/p(x) + (1-D)(Y - g(0,X))/(1-p(x)) - theta
     # which with moment and orthogonality condition fulfilled the difference between the two scores equals the treatment effect theta
-    psi_main_ens = mu_mat_main_ens[,1] - mu_mat_main_ens[,2]
-    psi_main_lasso = mu_mat_main_lasso[,1] - mu_mat_main_lasso[,2]
-    psi_main_xgb = mu_mat_main_xgb[,1] - mu_mat_main_xgb[,2]
-    psi_main_nn = mu_mat_main_nn[,1] - mu_mat_main_nn[,2]
+    te_main_ens = mu_mat_main_ens[,1] - mu_mat_main_ens[,2]
+    te_main_lasso = mu_mat_main_lasso[,1] - mu_mat_main_lasso[,2]
+    te_main_xgb = mu_mat_main_xgb[,1] - mu_mat_main_xgb[,2]
+    te_main_nn = mu_mat_main_nn[,1] - mu_mat_main_nn[,2]
     
-    psi_aux_ens = mu_mat_aux_ens[,1] - mu_mat_aux_ens[,2]
-    psi_aux_lasso = mu_mat_aux_lasso[,1] - mu_mat_aux_lasso[,2]
-    psi_aux_xgb = mu_mat_aux_xgb[,1] - mu_mat_aux_xgb[,2]
-    psi_aux_nn = mu_mat_aux_nn[,1] - mu_mat_aux_nn[,2]
+    te_aux_ens = mu_mat_aux_ens[,1] - mu_mat_aux_ens[,2]
+    te_aux_lasso = mu_mat_aux_lasso[,1] - mu_mat_aux_lasso[,2]
+    te_aux_xgb = mu_mat_aux_xgb[,1] - mu_mat_aux_xgb[,2]
+    te_aux_nn = mu_mat_aux_nn[,1] - mu_mat_aux_nn[,2]
     
-    # average all the treatment effects to get the ATE
-    ate_main_ens = mean(psi_main_ens)
-    ate_main_lasso = mean(psi_main_lasso)
-    ate_main_xgb = mean(psi_main_xgb)
-    ate_main_nn = mean(psi_main_nn)
+    te_ens = rowMeans(cbind(te_main_ens, te_aux_ens))
+    te_lasso = rowMeans(cbind(te_main_lasso, te_aux_lasso))
+    te_xgb = rowMeans(cbind(te_main_xgb, te_aux_xgb))
+    te_nn = rowMeans(cbind(te_main_nn, te_aux_nn))
     
-    ate_aux_ens = mean(psi_aux_ens)
-    ate_aux_lasso = mean(psi_aux_lasso)
-    ate_aux_xgb = mean(psi_aux_xgb)
-    ate_aux_nn = mean(psi_aux_nn)
+    se_te = matrix(NA, nrow = (length(oc_methods) + 1), ncol = 1)
+    
+    se_te[1,] = sqrt(sum((te_ens - mean(te_ens))^2) / length(te_ens))
+    se_te[2,] = sqrt(sum((te_lasso - mean(te_lasso))^2) / length(te_lasso))
+    se_te[3,] = sqrt(sum((te_xgb - mean(te_xgb))^2) / length(te_xgb))
+    se_te[4,] = sqrt(sum((te_nn - mean(te_nn))^2) / length(te_nn))
+    
+    colnames(se_te) = c("se_te")
+    rownames(se_te) = c("ensemble", "lasso", "xgb", "nn")
     
     # get the cross-fitted average treatment effect
-    ate_ens = mean(c(ate_main_ens, ate_aux_ens))
-    
-    ate_lasso = mean(c(ate_main_lasso, ate_aux_lasso))
-    ate_xgb = mean(c(ate_main_xgb, ate_aux_xgb))
-    ate_nn = mean(c(ate_main_nn, ate_aux_nn))
+    ate_ens = mean(te_ens)
+    ate_lasso = mean(te_lasso)
+    ate_xgb = mean(te_xgb)
+    ate_nn = mean(te_nn)
     
     # extract weights of ensemble
     w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
     w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
     
     # define single output
-    output = list("ate_ens" = ate_ens, "ate_lasso" = ate_lasso, "ate_xgb" = ate_xgb, "ate_nn" = ate_nn, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc)
+    output = list("ate_ens" = ate_ens, "ate_lasso" = ate_lasso, "ate_xgb" = ate_xgb, "ate_nn" = ate_nn,
+                  "te_ens" = te_ens, "te_lasso" = te_lasso, "te_xgb" = te_xgb, "te_nn" = te_nn, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, 
+                  "se_te" = se_te, "se_po" = se_mu)
     
     return(output)
     
