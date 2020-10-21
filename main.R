@@ -113,7 +113,7 @@ beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
 cv_folds = 2                        # Number of folds for cross-validation of used ML methods in the ensemble method
 
 
-# Simulation 1: Linear Case -----------------------------------------------
+# Simulation 1: Sparse Case -----------------------------------------------
 
 # Hyperparameter Tuning for DGP 1
 ## Data simulation for cross-validation of ml methods to select hyperparameters
@@ -211,10 +211,10 @@ for (j in 1:n_simulations) {
   te_lasso[,j] = dml_estimator$te_lasso
   te_xgb[,j] = dml_estimator$te_xgb
   te_nn[,j] = dml_estimator$te_nn
-  se_po_ens[j,] = dml_estimator$se_mu[1,]
-  se_po_lasso[j,] = dml_estimator$se_mu[2,]
-  se_po_xgb[j,] = dml_estimator$se_mu[3,]
-  se_po_nn[j,] = dml_estimator$se_mu[4,]
+  se_po_ens[j,] = dml_estimator$se_po[1,]
+  se_po_lasso[j,] = dml_estimator$se_po[2,]
+  se_po_xgb[j,] = dml_estimator$se_po[3,]
+  se_po_nn[j,] = dml_estimator$se_po[4,]
   se_te_ens[j] = dml_estimator$se_te[1]
   se_te_lasso[j] = dml_estimator$se_te[2]
   se_te_xgb[j] = dml_estimator$se_te[3]
@@ -253,5 +253,11 @@ for (i in 1:length(ps_methods_1)) {
 paste("Average treatment effect:", round(avg_effect_ens, 3))
 paste(sprintf("Ensemble weight E[Y|X] %s:",colnames(oc_ensemble_weights)), round(oc_ensemble_weights, 3))
 paste(sprintf("Ensemble weight E[D|X] %s:",colnames(ps_ensemble_weights)), round(ps_ensemble_weights, 3))
+
+
+
+
+
+# Simulation 2: Interaction Case ------------------------------------------
 
 

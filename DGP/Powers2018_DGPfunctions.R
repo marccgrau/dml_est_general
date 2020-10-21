@@ -21,7 +21,7 @@ condmean_func = function(X, D, mufunc, taufunc){
 # persons with greater mean effect are more likely to receive the treatment
 # this represents a usual bias in observational studies as mentioned by Powers (2018)
 propensity_func = function(X, mufunc, taufunc){
-  pi = (exp(mufunc(X) - taufunc(X)/2))/(1 + exp(mufunc(X) - taufunc(X)/2))
+  pi = (exp(mufunc(X) - taufunc(X)/2)/(1 + exp(mufunc(X) - taufunc(X)/2)))
   return(pi)
 }
 

@@ -13,23 +13,44 @@
 #' @param D_i treatment vector D_i ~ind Bernoulli(pi(X_i))
 #' @param Y_i outcome vector Y_i ~ind Normal(mu(X_i) + (D_i - 1/2)tau(X_i), sigma_Y^2 )
 
-generalDGP = function(n_covariates, n_observations, mufunc, taufunc, sigma) {
+generalDGP = function(n_covariates, n_observations, mufunc, taufunc, sigma, ps_given = NULL) {
   
-  X = matrix(NA, nrow = n_observations, ncol = n_covariates)
-  
-  for (i in 1:n_covariates){
-    if(i %% 2 == 0) {
-      X[,i] = rbinom(n_observations, 1, 0.5)
-    } else {
-      X[,i] = rnorm(n_observations, 0, 1)
+  if (ps_given = NULL){
+    X = matrix(NA, nrow = n_observations, ncol = n_covariates)
+    
+    for (i in 1:n_covariates){
+      if(i %% 2 == 0) {
+        X[,i] = rbinom(n_observations, 1, 0.5)
+      } else {
+        X[,i] = rnorm(n_observations, 0, 1)
+      }
     }
+    
+    ps = propensity_func(X, mufunc, taufunc)
+    
+    D = rbinom(n_observations, 1, )
+    
+    Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
+    
+  } else {
+    
+    X = matrix(NA, nrow = n_observations, ncol = n_covariates)
+    
+    for (i in 1:n_covariates){
+      if(i %% 2 == 0) {
+        X[,i] = rbinom(n_observations, 1, 0.5)
+      } else {
+        X[,i] = rnorm(n_observations, 0, 1)
+      }
+    }
+    
+    ps = ps_given
+    
+    D = rbinom(n_observations, 1, ps)
+    
+    Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
+    
   }
-  
-  ps = propensity_func(X, mufunc, taufunc)
-  
-  D = rbinom(n_observations, 1, ps)
-  
-  Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
   
   return(list(Y, D, X))
 }
