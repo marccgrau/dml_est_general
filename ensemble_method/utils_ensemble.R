@@ -2,8 +2,8 @@
 create_method = function(method,x_select=NULL,args=list(),name=NULL) {
   
   if (!(is.character(method) & length(method) == 1)) stop("Provide single string to define method.")
-  if (!(any(method == c("mean","ols","ridge","plasso","forest_grf","lasso", "lasso_bin",
-                        "elastic_net", "xgboost", "neural_net")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\", \"lasso_bin\",\"forest_grf\",\"xgboost\",\"neural_net\").")
+  if (!(any(method == c("mean","ols","ridge","plasso","forest_grf","lasso", "lasso_inter",
+                        "elastic_net", "xgboost", "neural_net")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\", \"lasso_inter\",\"forest_grf\",\"xgboost\",\"neural_net\").")
   if (!(is.null(args) | is.list(args))) stop("Provide either NULL or list for args.")
   if (!(is.null(x_select) | is.logical(x_select))) stop("Provide either NULL or logical for x_select.")
   if (!((is.character(name) & length(name) == 1) | is.null(name))) stop("Provide single string to name method.")
@@ -149,7 +149,16 @@ prep_cf_mat = function(n,cf,cl=NULL) {
 }
 
 
-
+interact.all <- function(input){
+  output <- do.call("cbind", lapply(1:ncol(input), FUN=function(z){ 
+    do.call("cbind", lapply(z:ncol(input), FUN=function(x){
+      tmp <- data.frame(input[,z] * input[,x])
+      colnames(tmp)[1] <- paste(colnames(input)[z], ":", colnames(input)[x], sep="") # Multiplication symbol changed to : as per R style instead of x to avoid confusion with variables containing x
+      tmp
+    }))
+  }))
+  output
+}
 
 
 

@@ -125,7 +125,7 @@ predict.lasso_fit = function(lasso_fit,x,y,xnew=NULL,weights=FALSE) {
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }
 
-# Cross-validated LASSO regression for binomial dependent variables ----------------------------------------
+# Cross-validated LASSO regression with first order interaction terms ----------------------------------------
 
 #' This function estimates cross-validated lasso regression based on the \code{\link{glmnet}} package
 #'
@@ -138,18 +138,34 @@ predict.lasso_fit = function(lasso_fit,x,y,xnew=NULL,weights=FALSE) {
 #' @return An object with S3 class "glmnet"
 #' @export
 
-lasso_bin_fit = function(x,y,args=list()) {
+lasso_inter_fit = function(x,y,args=list()) {
+  # try 1
+  #data = as.data.frame(cbind(y,x))
+  #mf = model.frame(y ~ -1 + .*., data = data)
+  #tmp = model.matrix(mf, data = data)
+  # Final version
+  inter_poly = interact.all(x)
+  tmp = as.matrix(cbind(x, inter_poly))
+
   
-  lasso_bin = do.call(cv.glmnet,c(list(x=x,y=y),args = args))
-  lasso_bin
+  lasso_inter = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
+  lasso_inter
 }
 
-predict.lasso_bin_fit = function(lasso__bin_fit,x,y,xnew=NULL,weights=FALSE) {
+predict.lasso_inter_fit = function(lasso__inter_fit,x,y,xnew=NULL,weights=FALSE) {
   
   if (isTRUE(weights)) stop("No weighted representation of Lasso available.")
-  if (is.null(xnew)) xnew = x
+  if (is.null(xnew)) {
+    data = as.data.frame(cbind(y,x))
+    mf = model.frame(y ~ -1 + (.)^2, data = data)
+    tmp = model.matrix(mf, data = data)
+    xnew = tmp} else {
+      data = as.data.frame(cbind(y,xnew))
+      mf = model.frame(y ~ (.)^2, data = data)
+      tmp = model.matrix(mf, data = data)
+      xnew = tmp}
   
-  fit = predict(lasso_bin_fit,newx=xnew,type="response",s="lambda.min")
+  fit = predict(lasso_inter_fit,newx=tmp,type="response",s="lambda.min")
   
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }
