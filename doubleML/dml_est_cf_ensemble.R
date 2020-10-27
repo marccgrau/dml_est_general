@@ -71,6 +71,7 @@ dml_est_cf_ensemble = function(y, d, x, ps_methods, oc_methods) {
     y_hat_main_nn = matrix(NA, nrow(x), 2)
     y_hat_aux_nn = matrix(NA, nrow(x), 2)
     
+    # estimations for the average treatment effect ate
     for (i in 1:2){
       # only use either treated or non-treated as groups (i = 1,2)
       # derive the model with the main data set and predict the outcomes with the auxiliary data set

@@ -75,6 +75,7 @@ source("DGP/Powers2018_DGPfunctions.R")
 source("DGP/Powers2018_generalDGP.R")
 
 # Hyperparameter Tuning
+source("hyperparam_tuning/hyperparam_tuning.R")
 source("hyperparam_tuning/hyperparam_lasso_ps.R")
 source("hyperparam_tuning/hyperparam_lasso_oc.R")
 source("hyperparam_tuning/hyperparam_xgboost_ps.R")
@@ -107,56 +108,12 @@ beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
 cv_folds = 2                        # Number of folds for cross-validation of used ML methods in the ensemble method
 
 
-# Simulation 1: Sparse Case -----------------------------------------------
+# Simulation 1 -----------------------------------------------
 
 # Hyperparameter Tuning for DGP 1
-## Data simulation for cross-validation of ml methods to select hyperparameters
-# Using the general DGP of Powers et al. (2018)
-data_cv = generalDGP(n_covariates, n_observations, f3, f5, 1, ps_given = 0.5)
-Y_cv = data_cv[[1]]
-D_cv = data_cv[[2]]
-X_cv = data_cv[[3]]
-
-## Lasso hyperparameters
-### Lasso hyperparameters are computationally less expensive to estimate
-### Nontheless, the approximate region of the best lambda minimzing the deviance is determined before the Monte Carlo simulation
-### Potential Outcome: Cross-validated lambda
-params_lasso_oc = hyperparam_lasso_oc(Y_cv, X_cv)
-
-### Propensity score: Cross-validated lambda
-params_lasso_ps = hyperparam_lasso_ps(D_cv, X_cv)
-
-## XGBoost hyperparameters
-### following the idea of: https://towardsdatascience.com/getting-to-an-hyperparameter-tuned-xgboost-model-in-no-time-a9560f8eb54b
-### Potential outcome: Random Search Algorithm
-params_xgb_oc = hyperparam_xgboost_oc(Y_cv, X_cv, cv_folds)
-
-### Propensity Score: Random Search Algorithm
-params_xgb_ps = hyperparam_xgboost_ps(D_cv, X_cv, cv_folds)
-
-
-## Neural Network Hyperparameters
-### Potential outcome: Grid search algorithm
-params_nn_oc = hyperparam_nnet_oc(Y_cv, X_cv)
-
-### Propensity score: Grid search algorithm
-params_nn_ps = hyperparam_nnet_ps(D_cv, X_cv)
-
-
-# Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
-# ML methods used for propensity score estimation
-lasso_ps_1 = create_method("lasso", name = "Lasso_ps_1", args = params_lasso_ps)
-xgb_ps_1 = create_method("xgboost", name = "XGBoost_ps_1", args = params_xgb_ps)
-nnet_ps_1 = create_method("neural_net", name = "NeuralNet_ps_1", args = params_nn_ps)
-
-# ML methods used for potential outcome estimation
-lasso_oc_1 = create_method("lasso", name = "Lasso_oc_1", args = params_lasso_oc)
-xgb_oc_1 = create_method("xgboost", name = "XGBoost_oc_1", args = params_xgb_oc)
-nnet_oc_1 = create_method("neural_net", name = "NeuralNet_oc_1", args = params_nn_oc)
-
-# list the respective methods for each ensemble
-ps_methods_1 = list(lasso_ps_1, xgb_ps_1, nnet_ps_1)
-oc_methods_1 = list(lasso_oc_1, xgb_oc_1, nnet_oc_1)
+hyperparams_1 = hyperparam_tuning_1(n_covariates, n_observations, f3, f5, f4, 1, cv_folds)
+ps_methods_1 = hyperparams_1$ps_methods
+oc_methods_1 = hyperparams_1$oc_methods
 
 # create empty matrices to fill throughout the simulation
 ate_ens = rep(NA, n_simulations)
@@ -187,7 +144,7 @@ ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1))
 for (j in 1:n_simulations) {
   
   # simulate data
-  data = generalDGP(n_covariates, n_observations, f3, f5, 1)
+  data = generalDGP(n_covariates, n_observations, f3, f5,f3, 1)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -252,17 +209,33 @@ paste(sprintf("Ensemble weight E[D|X] %s:",colnames(ps_ensemble_weights)), round
 
 
 
-# Simulation 2: Interaction Case ------------------------------------------
+# Simulation 2 ------------------------------------------
 
-# This DGP allows for higher order effects up to degree 3 and Interaction Terms
+# This DGP allows for higher order interaction effects up to degree 3 
 # The higher order effects should be best captured by tree based methods 
 # For f4 only bernoulli distributed features are used. These are combined in all possible ways
 # f6 uses indicator functions which interact with each other
 
-# Hyperparameter Tuning for DGP 2
+# Hyperparameter Tuning for DGP 3
 ## Data simulation for cross-validation of ml methods to select hyperparameters
 # Using the general DGP of Powers et al. (2018)
-data_cv = generalDGP(n_covariates, n_observations, f4, f6, 1, ps_given = 0.5)
+data_cv = generalDGP(n_covariates, n_observations, f4, f6, f5, 1)
+Y_cv = data_cv[[1]]
+D_cv = data_cv[[2]]
+X_cv = data_cv[[3]]
+
+
+# Simulation 3 ----------------------------------------------
+
+# This DGP allows for higher order effects up to degree 3, Interaction Terms and polynomials
+# The higher order effects should be best captured by tree based methods 
+# For f4 only bernoulli distributed features are used. These are combined in all possible ways
+# f6 uses indicator functions which interact with each other
+
+# Hyperparameter Tuning for DGP 3
+## Data simulation for cross-validation of ml methods to select hyperparameters
+# Using the general DGP of Powers et al. (2018)
+data_cv = generalDGP(n_covariates, n_observations, f4, f6, f5, 1)
 Y_cv = data_cv[[1]]
 D_cv = data_cv[[2]]
 X_cv = data_cv[[3]]

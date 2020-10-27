@@ -17,19 +17,9 @@ condmean_func = function(X, D, mufunc, taufunc){
   return(mu)
 }
 
-# as DML is destined to be used for observational studies we simulate observational data
-# persons with greater mean effect are more likely to receive the treatment
-# this represents a usual bias in observational studies as mentioned by Powers (2018)
 propensity_func = function(X, psfunc, w = 0){
   pi = 1/(1 + exp(-psfunc(X,w)))
   return(pi)
-}
-
-indicator_func = function(n, X, intercept, psfunc){
-  epsilon = rnorm(n, 0,1)
-  propensity = intercept + psfunc(X) + epsilon
-  D = as.numeric(as.logical(propensity > 0))
-  return(D)
 }
 
 y_func = function(n_obs, X, D, mufunc, taufunc, sigma = 1) {
