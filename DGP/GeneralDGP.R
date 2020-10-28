@@ -23,7 +23,7 @@ generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sig
   copX = mvrnorm(n_observations, mu = rep(0, n_covariates), Sigma = corr_matrix)
   uniforms = pnorm(copX)
   
-  if (is.null(ps_given)){
+
   X = matrix(NA, nrow = n_observations, ncol = n_covariates)
     for (i in 1:n_covariates){
       if(i %% 2 == 0) {
@@ -39,26 +39,6 @@ generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sig
     
     Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
     
-  } else {
-    
-    X = matrix(NA, nrow = n_observations, ncol = n_covariates)
-    
-    for (i in 1:n_covariates){
-      if(i %% 2 == 0) {
-        X[,i] = rbinom(n_observations, 1, 0.5)
-      } else {
-        X[,i] = rnorm(n_observations, 0, 1)
-      }
-    }
-    
-    ps = ps_given
-    
-    D = rbinom(n_observations, 1, ps)
-    
-    Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
-    
-  }
-  
   return(list(Y, D, X))
 }
 

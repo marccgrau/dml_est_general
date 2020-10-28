@@ -1,39 +1,33 @@
-hyperparam_nnet = function(y, x) {
+hyperparam_nnet = function(y, x, gridframe_nn) {
+  # potential outcome
+  # hyperparameter tuning for neural network
   
+  # split data for out of sample evaluation
   n = nrow(x)
   fold = sample(seq_len(nrow(x)), size = n*0.75)
-  
+
   x_tr = x[fold, ]
   x_te = x[-fold, ]
   
   y_tr = y[fold ]
   y_te = y[-fold]
   
+  # define optimal data types for implementation of neuralnet()
   names_nn = colnames(as.data.frame(x_tr))
   train_nn = as.data.frame(cbind(y_tr, x_tr))
   test_X_nn = as.data.frame(x_te)
   test_Y_nn = as.data.frame(y_te)
   
+  # define neural network formula
   colnames(train_nn) = c("Y", names_nn)
   nn_formula = as.formula(paste("Y ~", paste(names_nn, collapse = " + ")))
   
-  params_nn = list(
-    act.fct = c("tanh", "logistic"),
-    algorithm = c("rprop+"),
-    neurons = c(4:6),
-    threshold = 0.8,
-    learningrate.limit = c(0.01, 0.02, 0.03),
-    err.fct = "sse",
-    stepmax = 200000,
-    linear.output = TRUE,
-    rep = c(1)
-  )
+  lowest_error_list = rep(NA, nrow(grid_frame_nn))
   
-  grid_frame_nn = expand.grid(params_nn)
-  lowest_error_list = list()
-  
+  # calculate a neural network for each set of hyperparameters as defined in the grid
   for (row in 1:nrow(grid_frame_nn)) {
-    nncv <- neuralnet(formula = nn_formula, 
+    assign("skip_to_next", FALSE, env=globalenv())
+    tryCatch({nncv = neuralnet(formula = nn_formula, 
                         data=train_nn,
                         act.fct = grid_frame_nn$act.fct[row],
                         hidden = grid_frame_nn$neurons[row],
@@ -46,27 +40,35 @@ hyperparam_nnet = function(y, x) {
                         algorithm = grid_frame_nn$algorithm[row],
                         lifesign = "full",
                         lifesign.step = 10000
-    )
-    preds_nn = predict(nncv, newdata = test_X_nn)
-    lowest_error_list[[row]] = rmse_calc(test_Y_nn, preds_nn)
+    )}, warning = function(w){w
+      assign("skip_to_next", TRUE, env=globalenv())
+      }, 
+    finally = {
+      if (get("skip_to_next", env=globalenv())){
+        preds_nn = rep(mean(y_tr), nrow(test_Y_nn))
+        lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
+        next
+      } else {
+        preds_nn = predict(nncv, newdata = test_X_nn)
+        lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
+        next
+      }
+    })
   }
   
-  ### Create object that contains all accuracy's
-  lowest_error_df = do.call(rbind, lowest_error_list)
+  # combine the errors with the respective parameter set
+  gridsearch = cbind(lowest_error_list, grid_frame_nn)
   
-  ### Bind columns of accuracy values and random hyperparameter values
-  gridsearch = cbind(lowest_error_df, grid_frame_nn)
+  # evaluate best performing set
+  bestparams = gridsearch[which.min(lowest_error_list), ]
   
-  ### Quickly display highest accuracy
-  bestparams = gridsearch[which.min(lowest_error_df), ]
-  
+  # output the best hyperparameter set
   finalparams = list(act.fct = bestparams$act.fct, 
-                     hidden = bestparams$hidden,
+                     hidden = bestparams$neurons,
                      stepmax = bestparams$stepmax,
                      linear.output = bestparams$linear.output,
                      err.fct = bestparams$err.fct,
                      threshold = bestparams$threshold,
-                     learningrate = bestparams$learningrate,
                      rep = bestparams$rep,
                      algorithm = bestparams$algorithm)
   

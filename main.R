@@ -70,18 +70,17 @@ set.seed(12345)
 source("general_functions/general_utils.R")
 
 # DGPs
-source("DGP/Powers2018_nuisancefunctions.R")
-source("DGP/Powers2018_DGPfunctions.R")
-source("DGP/Powers2018_generalDGP.R")
+source("DGP/nuisance_functions.R")
+source("DGP/GeneralDGP.R")
+source("DGP/DGPfunctions.R")
 
 # Hyperparameter Tuning
 source("hyperparam_tuning/hyperparam_tuning.R")
-source("hyperparam_tuning/hyperparam_lasso_ps.R")
-source("hyperparam_tuning/hyperparam_lasso_oc.R")
-source("hyperparam_tuning/hyperparam_xgboost_ps.R")
-source("hyperparam_tuning/hyperparam_xgboost_oc.R")
-source("hyperparam_tuning/hyperparam_nnet_ps.R")
-source("hyperparam_tuning/hyperparam_nnet_oc.R")
+source("hyperparam_tuning/hyperparam_lasso.R")
+source("hyperparam_tuning/hyperparam_xgboost.R")
+source("hyperparam_tuning/randomsearch_xgb.R")
+source("hyperparam_tuning/hyperparam_nnet.R")
+source("hyperparam_tuning/gridframes_nn.R")
 
 # DML estimator
 source("doubleML/dml_est_cf_ensemble.R")
@@ -99,7 +98,7 @@ source("ensemble_method/utils_ensemble.R")
 n_simulations = 3                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
-n_covariates = 10                    # Number of confounders
+n_covariates = 15                    # Number of confounders
 n_observations = 1000               # Number of observations in simulated dataset
 effect = 2                          # True value for effect
 beta = seq(1, n_covariates, 1)/10   # Coefficients for confounders in DGP
@@ -142,9 +141,11 @@ ps_ensemble = matrix(NA, n_simulations, length(ps_methods_1))
 
 
 for (j in 1:n_simulations) {
-  
+  ###########
+  ## 50/50 ##
+  ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, f3, f5,f3, 1)
+  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = 0)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -176,12 +177,55 @@ for (j in 1:n_simulations) {
   print(paste("Simulation round", j))
 }
 
+for (j in 1:n_simulations) {
+  ###########
+  ## 10/90 ##
+  ###########
+  # simulate data
+  data_small = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = -3.2)
+  Y_small = data[[1]]
+  D_small = data[[2]]
+  X_small = data[[3]]
+  n_obs = seq(1, nrow(X), 1)
+  
+  # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
+  dml_estimator_small  = dml_est_cf_ensemble(Y, D, X, ps_methods_1, oc_methods_1)
+  
+  # update list of estimates for current simulation round
+  ate_ens_small[j] = dml_estimator_small$ate_ens                      # estimated effect theta in current simulation round
+  ate_lasso_small[j] = dml_estimator_small$ate_lasso
+  ate_xgb_small[j] = dml_estimator_small$ate_xgb
+  ate_nn_small[j] = dml_estimator_small$ate_nn
+  te_ens_small[,j] = dml_estimator_small$te_ens
+  te_lasso_small[,j] = dml_estimator_small$te_lasso
+  te_xgb_small[,j] = dml_estimator_small$te_xgb
+  te_nn_small[,j] = dml_estimator_small$te_nn
+  se_po_ens_small[j,] = dml_estimator_small$se_po[1,]
+  se_po_lasso_small[j,] = dml_estimator_small$se_po[2,]
+  se_po_xgb_small[j,] = dml_estimator_small$se_po[3,]
+  se_po_nn_small[j,] = dml_estimator_small$se_po[4,]
+  se_te_ens_small[j] = dml_estimator_small$se_te[1]
+  se_te_lasso_small[j] = dml_estimator_small$se_te[2]
+  se_te_xgb_small[j] = dml_estimator_small$se_te[3]
+  se_te_nn_small[j] = dml_estimator_small$se_te[4]
+  ps_ensemble_small[j,] = dml_estimator_small$w_ens_ps           # store weights of current simulation round
+  oc_ensemble_small[j,] = dml_estimator_small$w_ens_oc          # store weights of current simulation round
+  
+  print(paste("Simulation round", j))
+}
+
 # Averaging over all simulations
-# Average treatment effect
-avg_effect_ens = mean(ate_ens)                          # average effect over all simulation rounds
+# Average treatment effect 50/50
+avg_effect_ens = mean(ate_ens)                          
 avg_effect_lasso = mean(ate_lasso)
 avg_effect_xgb = mean(ate_xgb)
 avg_effect_nn = mean(ate_nn)
+
+# Average treatment effect 10/90
+avg_effect_ens_small = mean(ate_ens)                          
+avg_effect_lasso_small = mean(ate_lasso)
+avg_effect_xgb_small = mean(ate_xgb)
+avg_effect_nn_small = mean(ate_nn)
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))
