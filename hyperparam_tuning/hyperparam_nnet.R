@@ -1,4 +1,4 @@
-hyperparam_nnet = function(y, x, gridframe_nn) {
+hyperparam_nnet = function(y, x, grid_nn) {
   # potential outcome
   # hyperparameter tuning for neural network
   
@@ -22,22 +22,21 @@ hyperparam_nnet = function(y, x, gridframe_nn) {
   colnames(train_nn) = c("Y", names_nn)
   nn_formula = as.formula(paste("Y ~", paste(names_nn, collapse = " + ")))
   
-  lowest_error_list = rep(NA, nrow(grid_frame_nn))
+  lowest_error_list = rep(NA, nrow(grid_nn))
   
   # calculate a neural network for each set of hyperparameters as defined in the grid
-  for (row in 1:nrow(grid_frame_nn)) {
+  for (row in 1:nrow(grid_nn)) {
     assign("skip_to_next", FALSE, env=globalenv())
     tryCatch({nncv = neuralnet(formula = nn_formula, 
                         data=train_nn,
-                        act.fct = grid_frame_nn$act.fct[row],
-                        hidden = grid_frame_nn$neurons[row],
-                        stepmax = grid_frame_nn$stepmax[row],
-                        linear.output = grid_frame_nn$linear.output[row],
-                        err.fct = grid_frame_nn$err.fct[row],
-                        threshold = grid_frame_nn$threshold[row],
-                        learningrate = grid_frame_nn$learningrate[row],
-                        rep = grid_frame_nn$rep[row],
-                        algorithm = grid_frame_nn$algorithm[row],
+                        act.fct = grid_nn$act.fct[row],
+                        hidden = grid_nn$neurons[row],
+                        stepmax = grid_nn$stepmax[row],
+                        linear.output = grid_nn$linear.output[row],
+                        err.fct = grid_nn$err.fct[row],
+                        threshold = grid_nn$threshold[row],
+                        rep = grid_nn$rep[row],
+                        algorithm = grid_nn$algorithm[row],
                         lifesign = "full",
                         lifesign.step = 10000
     )}, warning = function(w){w
@@ -57,7 +56,7 @@ hyperparam_nnet = function(y, x, gridframe_nn) {
   }
   
   # combine the errors with the respective parameter set
-  gridsearch = cbind(lowest_error_list, grid_frame_nn)
+  gridsearch = cbind(lowest_error_list, grid_nn)
   
   # evaluate best performing set
   bestparams = gridsearch[which.min(lowest_error_list), ]

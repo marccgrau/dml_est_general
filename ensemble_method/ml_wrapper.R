@@ -148,24 +148,23 @@ lasso_inter_fit = function(x,y,args=list()) {
   tmp = as.matrix(cbind(x, inter_poly))
 
   
-  lasso_inter = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
+  lasso_tmp = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
+  lasso_inter = do.call(glmnet, c(list(x = tmp, y = y), args = args, lasso_tmp$lambda.1se))
   lasso_inter
 }
 
-predict.lasso_inter_fit = function(lasso__inter_fit,x,y,xnew=NULL,weights=FALSE) {
+predict.lasso_inter_fit = function(lasso_inter_fit,x,y,xnew=NULL,weights=FALSE) {
   
   if (isTRUE(weights)) stop("No weighted representation of Lasso available.")
   if (is.null(xnew)) {
-    data = as.data.frame(cbind(y,x))
-    mf = model.frame(y ~ -1 + (.)^2, data = data)
-    tmp = model.matrix(mf, data = data)
-    xnew = tmp} else {
-      data = as.data.frame(cbind(y,xnew))
-      mf = model.frame(y ~ (.)^2, data = data)
-      tmp = model.matrix(mf, data = data)
-      xnew = tmp}
+    inter_poly = interact.all(x)
+    tmp = as.matrix(cbind(x, inter_poly))
+    } else {
+      inter_poly = interact.all(xnew)
+      tmp = as.matrix(cbind(xnew, inter_poly))
+      }
   
-  fit = predict(lasso_inter_fit,newx=tmp,type="response",s="lambda.min")
+  fit = predict(lasso_inter_fit, newx=tmp, type="response")
   
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }

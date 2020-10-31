@@ -1,4 +1,4 @@
-hyperparam_xgboost = function(y, x, cvfold, params_df) {
+hyperparam_xgboost = function(y, x, cvfold = 2, params_df, ps = FALSE) {
   # potential outcome
   # implementation of a random search algorithm to find the best possible combination of hyperparameters for xgboost
   # to save computational resources the random search is preferable over the grid search algorithm
@@ -20,24 +20,46 @@ hyperparam_xgboost = function(y, x, cvfold, params_df) {
   lowest_errors = list()
   
   # simulate for each parameter set an xgboost model
-  for (row in 1:nrow(params_df)){
-    model_cv <- xgb.train(data=dt_cv,
-                        booster = params_df$booster[row],
-                        objective = params_df$objective[row],
-                        max_depth = params_df$max_depth[row],
-                        eta = params_df$eta[row],
-                        subsample = params_df$subsample[row],
-                        colsample_bytree = params_df$colsample_bytree[row],
-                        min_child_weight = params_df$min_child_weight[row],
-                        lambda = params_df$lambda,
-                        nrounds= params_df$nrounds,
-                        eval_metric = params_df$eval_metric,
-                        early_stopping_rounds= params_df$early_stopping_rounds,
-                        print_every_n = 100,
-                        watchlist = list(train = dt_cv, val = dval_cv)
-    )
-    lowest_errors[[row]] <- as.data.frame(min(model_cv$evaluation_log$val_rmse))
+  if(ps){
+    for (row in 1:nrow(params_df)){
+      model_cv <- xgb.train(data=dt_cv,
+                            booster = params_df$booster[row],
+                            objective = params_df$objective[row],
+                            max_depth = params_df$max_depth[row],
+                            eta = params_df$eta[row],
+                            subsample = params_df$subsample[row],
+                            colsample_bytree = params_df$colsample_bytree[row],
+                            min_child_weight = params_df$min_child_weight[row],
+                            alpha = params_df$alpha[row],
+                            nrounds= params_df$nrounds[row],
+                            eval_metric = params_df$eval_metric[row],
+                            early_stopping_rounds= params_df$early_stopping_rounds[row],
+                            print_every_n = 100,
+                            watchlist = list(train = dt_cv, val = dval_cv)
+      )
+      lowest_errors[[row]] <- as.data.frame(min(model_cv$evaluation_log$val_error))
+    }
+  } else{
+    for (row in 1:nrow(params_df)){
+      model_cv <- xgb.train(data=dt_cv,
+                            booster = params_df$booster[row],
+                            objective = params_df$objective[row],
+                            max_depth = params_df$max_depth[row],
+                            eta = params_df$eta[row],
+                            subsample = params_df$subsample[row],
+                            colsample_bytree = params_df$colsample_bytree[row],
+                            min_child_weight = params_df$min_child_weight[row],
+                            alpha = params_df$alpha[row],
+                            nrounds= params_df$nrounds[row],
+                            eval_metric = params_df$eval_metric[row],
+                            early_stopping_rounds = params_df$early_stopping_rounds[row],
+                            print_every_n = 100,
+                            watchlist = list(train = dt_cv, val = dval_cv)
+      )
+      lowest_errors[[row]] <- as.data.frame(min(model_cv$evaluation_log$val_rmse))
+    }
   }
+
   
   # extract the rmse of each parameter set
   lowest_error_df = do.call(rbind, lowest_errors)
@@ -46,19 +68,24 @@ hyperparam_xgboost = function(y, x, cvfold, params_df) {
   randomsearch = cbind(lowest_error_df, params_df)
   
   # extract lowest rmse parameter set
-  bestparams = randomsearch[which.min(randomsearch$`min(model_cv$evaluation_log$val_rmse)`), ]
+  if(ps){
+    bestparams = randomsearch[which.min(randomsearch$`min(model_cv$evaluation_log$val_error)`), ]
+  } else {
+    bestparams = randomsearch[which.min(randomsearch$`min(model_cv$evaluation_log$val_rmse)`), ]
+  }
+
   
   # output the best performing hyperparameters
   finalparams = list(booster = bestparams$booster, 
-                       objective = bestparams$objective,
-                       max_depth = bestparams$max_depth,
-                       eta = bestparams$eta,
-                       subsample = bestparams$subsample,
-                       colsample_bytree = bestparams$colsample_bytree,
-                       min_child_weight = bestparams$min_child_weight,
-                       lambda = bestparams$lambda,
-                       nrounds= 300,
-                       eval_metric = "rmse")
+                     objective = bestparams$objective,
+                     max_depth = bestparams$max_depth,
+                     eta = bestparams$eta,
+                     subsample = bestparams$subsample,
+                     colsample_bytree = bestparams$colsample_bytree,
+                     min_child_weight = bestparams$min_child_weight,
+                     alpha = bestparams$alpha,
+                     nrounds= bestparams$nrounds,
+                     eval_metric = bestparams$eval_metric)
   
   return(finalparams)
 }

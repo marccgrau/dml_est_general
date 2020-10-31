@@ -70,8 +70,8 @@ set.seed(12345)
 source("general_functions/general_utils.R")
 
 # DGPs
-source("DGP/nuisance_functions.R")
 source("DGP/GeneralDGP.R")
+source("DGP/nuisance_functions.R")
 source("DGP/DGPfunctions.R")
 
 # Hyperparameter Tuning
