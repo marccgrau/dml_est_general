@@ -139,17 +139,12 @@ predict.lasso_fit = function(lasso_fit,x,y,xnew=NULL,weights=FALSE) {
 #' @export
 
 lasso_inter_fit = function(x,y,args=list()) {
-  # try 1
-  #data = as.data.frame(cbind(y,x))
-  #mf = model.frame(y ~ -1 + .*., data = data)
-  #tmp = model.matrix(mf, data = data)
   # Final version
   inter_poly = interact.all(x)
   tmp = as.matrix(cbind(x, inter_poly))
 
   
-  lasso_tmp = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
-  lasso_inter = do.call(glmnet, c(list(x = tmp, y = y), args = args, lasso_tmp$lambda.1se))
+  lasso_inter = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
   lasso_inter
 }
 
@@ -164,7 +159,7 @@ predict.lasso_inter_fit = function(lasso_inter_fit,x,y,xnew=NULL,weights=FALSE) 
       tmp = as.matrix(cbind(xnew, inter_poly))
       }
   
-  fit = predict(lasso_inter_fit, newx=tmp, type="response")
+  fit = predict(lasso_inter_fit, newx = tmp, type = "response", s = "lambda.1se")
   
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }
@@ -260,10 +255,20 @@ neural_net_fit = function(x,y,args=list()) {
   tempdata = cbind(y_nn, x_nn)
   
   nn_formula = as.formula(paste("Y1 ~", paste(colnames(x_nn), collapse = " + ")))
-  
-  NNet = do.call(neuralnet, c(list(formula = nn_formula, data = tempdata), args))
-  
-  list("model" = NNet)
+  assign("failed", FALSE, env=globalenv())
+  tryCatch({nnet = do.call(neuralnet, c(list(formula = nn_formula, data = tempdata), args))
+  }, warning = function(w){w
+    assign("failed", TRUE, env=globalenv())
+  }, 
+  finally = {
+    if (get("failed", env=globalenv())){
+      state = TRUE
+      list("model" = NULL, "state" = state)
+    } else {
+      state = FALSE
+      list("model" = nnet, "state" = state)
+    }
+  })
 }
 
 
@@ -273,7 +278,11 @@ predict.neural_net_fit = function(neural_net_fit,x,y,xnew=NULL,weights=FALSE) {
   
   xnew_nn = as.data.frame(xnew)
   
-  preds = predict(neural_net_fit$model,newdata = xnew_nn)
+  if (neural_net_fit$state){
+    preds = rep(mean(y), nrow(xnew_nn))
+  } else {
+    preds = predict(neural_net_fit$model, newdata = xnew_nn)
+  }
   
   list("prediction"= preds, "weights" = "No weighted representation of the neural network available")
 }
