@@ -148,6 +148,7 @@ for (j in 1:n_simulations) {
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
+  true_te = data[[4]]
   n_obs = seq(1, nrow(X), 1)
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted

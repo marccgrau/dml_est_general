@@ -70,7 +70,7 @@ mu3 = function(X){
 tau1 = function(X){
   if (ncol(X) >= 9){
     
-    y = X[,1] + X[,2] + X[,4]*X[,7] + X[,9]^2 - 2 + rnorm(1,0,1)
+    y = X[,1] + X[,2] + X[,4]*X[,7] + X[,9]^2 - 2 
     
     return(y)
   } else {
@@ -81,7 +81,7 @@ tau1 = function(X){
 tau2 = function(X){
   if (ncol(X) >= 9){
     
-    y = X[,2] + X[,5]*X[,7] + X[,3]*X[,8]*X[,9] + X[,4]*X[,5]*X[,6]*X[,7] + rnorm(1,0,1)
+    y = X[,2] + X[,5]*X[,7] + X[,3]*X[,8]*X[,9] + X[,4]*X[,5]*X[,6]*X[,7] 
     
     return(y)
   } else {
@@ -92,7 +92,7 @@ tau2 = function(X){
 tau3 = function(X){
   if (ncol(X) >= 9){
     
-    y = 0.5*(X[,1]^2 + X[,2] + X[,3]^2 + X[,4] + X[,5]^3 + X[,6] + X[,7]^3 + X[,8] + X[,9]^4 - 5) + rnorm(1,0,1)
+    y = 0.5*(X[,1]^2 + X[,2] + X[,3]^2 + X[,4] + X[,5]^3 + X[,6] + X[,7]^3 + X[,8] + X[,9]^4 - 5) 
     
     return(y)
   } else {
