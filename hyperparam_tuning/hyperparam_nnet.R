@@ -25,35 +25,69 @@ hyperparam_nnet = function(y, x, grid_nn) {
   lowest_error_list = rep(NA, nrow(grid_nn))
   
   # calculate a neural network for each set of hyperparameters as defined in the grid
-  for (row in 1:nrow(grid_nn)) {
-    assign("skip_to_next", FALSE, env=globalenv())
-    tryCatch({nncv = neuralnet(formula = nn_formula, 
-                        data=train_nn,
-                        act.fct = grid_nn$act.fct[row],
-                        hidden = grid_nn$neurons[row],
-                        stepmax = grid_nn$stepmax[row],
-                        linear.output = grid_nn$linear.output[row],
-                        err.fct = grid_nn$err.fct[row],
-                        threshold = grid_nn$threshold[row],
-                        rep = grid_nn$rep[row],
-                        algorithm = grid_nn$algorithm[row],
-                        lifesign = "full",
-                        lifesign.step = 10000
-    )}, warning = function(w){w
-      assign("skip_to_next", TRUE, env=globalenv())
+  if (grid_nn$linear.output[1] == TRUE){
+    for (row in 1:nrow(grid_nn)) {
+      assign("skip_to_next", FALSE, env=globalenv())
+      tryCatch({nncv = neuralnet(formula = nn_formula, 
+                                 data=train_nn,
+                                 act.fct = grid_nn$act.fct[row],
+                                 hidden = grid_nn$neurons[row],
+                                 stepmax = grid_nn$stepmax[row],
+                                 linear.output = grid_nn$linear.output[row],
+                                 err.fct = grid_nn$err.fct[row],
+                                 threshold = grid_nn$threshold[row],
+                                 rep = grid_nn$rep[row],
+                                 algorithm = grid_nn$algorithm[row],
+                                 lifesign = "full",
+                                 lifesign.step = 10000
+      )}, warning = function(w){w
+        assign("skip_to_next", TRUE, env=globalenv())
       }, 
-    finally = {
-      if (get("skip_to_next", env=globalenv())){
-        preds_nn = rep(mean(y_tr), nrow(test_Y_nn))
-        lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
-        next
-      } else {
-        preds_nn = predict(nncv, newdata = test_X_nn)
-        lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
-        next
-      }
-    })
+      finally = {
+        if (get("skip_to_next", env=globalenv())){
+          preds_nn = rep(mean(y_tr), nrow(test_Y_nn))
+          lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
+          next
+        } else {
+          preds_nn = predict(nncv, newdata = test_X_nn)
+          lowest_error_list[row] = rmse_calc(test_Y_nn, preds_nn)
+          next
+        }
+      })
+    }
+  } else {
+    for (row in 1:nrow(grid_nn)) {
+      assign("skip_to_next", FALSE, env=globalenv())
+      tryCatch({nncv = neuralnet(formula = nn_formula, 
+                                 data=train_nn,
+                                 act.fct = grid_nn$act.fct[row],
+                                 hidden = grid_nn$neurons[row],
+                                 stepmax = grid_nn$stepmax[row],
+                                 linear.output = grid_nn$linear.output[row],
+                                 err.fct = grid_nn$err.fct[row],
+                                 threshold = grid_nn$threshold[row],
+                                 rep = grid_nn$rep[row],
+                                 algorithm = grid_nn$algorithm[row],
+                                 lifesign = "full",
+                                 lifesign.step = 10000
+      )}, warning = function(w){w
+        assign("skip_to_next", TRUE, env=globalenv())
+      }, 
+      finally = {
+        if (get("skip_to_next", env=globalenv())){
+          preds_nn = rep(mean(y_tr), nrow(test_Y_nn))
+          lowest_error_list[row] = LogLoss(preds_nn, as.matrix(test_Y_nn))
+          next
+        } else {
+          preds_nn = predict(nncv, newdata = test_X_nn)
+          lowest_error_list[row] = LogLoss(preds_nn, as.matrix(test_Y_nn))
+          next
+        }
+      })
+    }
   }
+  
+
   
   # combine the errors with the respective parameter set
   gridsearch = cbind(lowest_error_list, grid_nn)

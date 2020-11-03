@@ -3,7 +3,7 @@ create_method = function(method,x_select=NULL,args=list(),name=NULL) {
   
   if (!(is.character(method) & length(method) == 1)) stop("Provide single string to define method.")
   if (!(any(method == c("mean","ols","ridge","plasso","forest_grf","lasso", "lasso_inter",
-                        "elastic_net", "xgboost", "neural_net")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\", \"lasso_inter\",\"forest_grf\",\"xgboost\",\"neural_net\").")
+                        "elastic_net", "xgboost", "neural_net", "nn_keras")))) stop("Provide one of these options c(\"mean\",\"ols\",\"ridge\",\"plasso\", \"lasso_inter\",\"forest_grf\",\"xgboost\", \"nn_keras\" ,\"neural_net\")")
   if (!(is.null(args) | is.list(args))) stop("Provide either NULL or list for args.")
   if (!(is.null(x_select) | is.logical(x_select))) stop("Provide either NULL or logical for x_select.")
   if (!((is.character(name) & length(name) == 1) | is.null(name))) stop("Provide single string to name method.")
@@ -158,6 +158,34 @@ interact.all <- function(input){
     }))
   }))
   output
+}
+
+
+#' Model construction for Keras
+#' creates model structure as defined with given paramters
+#'
+
+build_model <- function(data, spec, 
+                        units1, units2, act.fct1 = "sigmoid", act.fct2 = "sigmoid", act.fctfinal = NULL, 
+                        loss.fct = "mse", eval.metric = "mean_squared_error") {
+  input <- layer_input_from_dataset(data %>% dplyr::select(-label))
+  
+  output <- input %>% 
+    layer_dense_features(dense_features(spec)) %>% 
+    layer_dense(units = units1, activation = act.fct1) %>%
+    layer_dense(units = units2, activation = act.fct2) %>%
+    layer_dense(units = 1, activation = act.fctfinal) 
+  
+  model <- keras_model(input, output)
+  
+  model %>% 
+    compile(
+      loss = loss.fct,
+      optimizer = optimizer_rmsprop(),
+      metrics = list(eval.metric)
+    )
+  
+  model
 }
 
 

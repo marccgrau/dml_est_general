@@ -2,8 +2,8 @@
 source("hyperparam_tuning/hyperparam_lasso.R")
 source("hyperparam_tuning/hyperparam_xgboost.R")
 source("hyperparam_tuning/randomsearch_xgb.R")
-source("hyperparam_tuning/hyperparam_nnet.R")
-source("hyperparam_tuning/gridframes_nn.R")
+source("hyperparam_tuning/hyperparam_nnet_keras.R")
+source("hyperparam_tuning/gridframes_nn_keras.R")
 
 
 hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, w = 0){
@@ -36,23 +36,23 @@ hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, ps
   
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
-  grid_nn_oc = gridframe_oc_1()
-  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc)
+  grid_nn_oc = grid_keras_oc_1()
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc)
   
   ### Propensity score: Grid search algorithm
-  grid_nn_ps = gridframe_ps_1()
-  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps)
+  grid_nn_ps = grid_keras_oc_1()
+  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
   lasso_ps = create_method("lasso_inter", name = "Lasso_ps_1", args = params_lasso_ps)
   xgb_ps = create_method("xgboost", name = "XGBoost_ps_1", args = params_xgb_ps)
-  nnet_ps = create_method("neural_net", name = "NeuralNet_ps_1", args = params_nn_ps)
+  nnet_ps = create_method("nn_keras", name = "nn_ps_1", args = params_nn_ps)
   
   # ML methods used for potential outcome estimation
   lasso_oc = create_method("lasso_inter", name = "Lasso_oc_1", args = params_lasso_oc)
   xgb_oc = create_method("xgboost", name = "XGBoost_oc_1", args = params_xgb_oc)
-  nnet_oc = create_method("neural_net", name = "NeuralNet_oc_1", args = params_nn_oc)
+  nnet_oc = create_method("nn_keras", name = "nn_oc_1", args = params_nn_oc)
   
   # list the respective methods for each ensemble
   ps_methods = list(lasso_ps, xgb_ps, nnet_ps)

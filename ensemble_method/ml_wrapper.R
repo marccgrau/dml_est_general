@@ -243,7 +243,7 @@ predict.xgboost_fit = function(xgb_fit,x,y,xnew=NULL,weights=FALSE) {
 }
 
 
-# Neural Network ----------------------------------------------------------
+# Neural Network implementation with the neuralnet package ----------------------------------------------------------
 
 neural_net_fit = function(x,y,args=list()) {
   
@@ -257,16 +257,18 @@ neural_net_fit = function(x,y,args=list()) {
   nn_formula = as.formula(paste("Y1 ~", paste(colnames(x_nn), collapse = " + ")))
   assign("failed", FALSE, env=globalenv())
   tryCatch({nnet = do.call(neuralnet, c(list(formula = nn_formula, data = tempdata), args))
+  state = FALSE
+  return(list("model" = nnet, "state" = state))
   }, warning = function(w){w
     assign("failed", TRUE, env=globalenv())
   }, 
   finally = {
     if (get("failed", env=globalenv())){
       state = TRUE
-      list("model" = NULL, "state" = state)
+      return(list("model" = NULL, "state" = state))
     } else {
       state = FALSE
-      list("model" = nnet, "state" = state)
+      return(list("model" = nnet, "state" = state))
     }
   })
 }
@@ -283,6 +285,69 @@ predict.neural_net_fit = function(neural_net_fit,x,y,xnew=NULL,weights=FALSE) {
   } else {
     preds = predict(neural_net_fit$model, newdata = xnew_nn)
   }
+  
+  list("prediction"= preds, "weights" = "No weighted representation of the neural network available")
+}
+
+
+# Neural Network implemented with Keras and Tensorflow --------------------
+
+nn_keras_fit = function(x,y,args=list()) {
+  column_names = rep(NA, ncol(x))
+  for(i in 1:ncol(x)){
+    column_names[i] = paste0("x",i)
+  }
+  
+  data = x %>% as_tibble(.name_repair = "minimal") %>%
+    setNames(column_names) %>%
+    mutate(label = y)
+  
+  spec = feature_spec(data, label ~.) %>%
+    step_numeric_column(all_numeric()) %>%
+    fit()
+  
+  layer = layer_dense_features(
+    feature_columns = dense_features(spec),
+    dtype = tf$float32
+  )
+  
+  model = build_model(data, 
+                      spec, 
+                      units1 = args$units1, 
+                      units2 = args$units2, 
+                      act.fct1 = args$act.fct1, 
+                      act.fct2 = args$act.fct2,
+                      act.fctfinal = args$act.fctfinal, 
+                      loss.fct = args$loss.fct, 
+                      eval.metric = args$eval.metric)
+  
+  early_stop <- callback_early_stopping(monitor = "val_loss", patience = 30)
+  
+  model %>% fit(
+    x = data %>% dplyr::select(-label),
+    y = data$label,
+    epochs = 500,
+    validation_split = 0.2,
+    verbose = 0,
+    callbacks = list(early_stop)
+  )
+  return(model)
+}
+
+
+predict.nn_keras_fit = function(nn_keras_fit,x,y,xnew=NULL,weights=FALSE) {
+  
+  if (is.null(xnew)) xnew = x
+  
+  column_names = rep(NA, ncol(xnew))
+  for(i in 1:ncol(xnew)){
+    column_names[i] = paste0("x",i)
+  }
+  
+  newdata = xnew %>% as_tibble(.name_repair = "minimal") %>%
+    setNames(column_names)
+  
+  preds = nn_keras_fit %>% predict(newdata)
   
   list("prediction"= preds, "weights" = "No weighted representation of the neural network available")
 }

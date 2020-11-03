@@ -54,7 +54,7 @@
 
 ## Load necessary packages, set working directory and seed, remove previously stored variables
 
-toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", "matrixStats", "xgboost", "neuralnet", "MASS")
+toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", "keras", "tfdatasets")
 toinstall <- toload[which(toload %in% installed.packages()[,1] == F)]
 lapply(toinstall, install.packages, character.only = TRUE)
 lapply(toload, require, character.only = TRUE)
@@ -137,7 +137,13 @@ for(i in 1:length(ml_methods)) {
 oc_ensemble_1 = matrix(NA, n_simulations, length(oc_methods_1))
 ps_ensemble_1 = matrix(NA, n_simulations, length(ps_methods_1)) 
 
+# empty matrices to store effective values of treatment
+te_t = matrix(NA, n_observations, n_simulations)
+ate_t = rep(NA, n_simulations)
+se_te_t = rep(NA, n_simulations)
 
+ate_ens_1 = matrix(NA, n_simulations,length(ml_methods))
+colnames(ate_ens_1) = ml_methods
 
 for (j in 1:n_simulations) {
   ###########
@@ -149,20 +155,24 @@ for (j in 1:n_simulations) {
   D = data[[2]]
   X = data[[3]]
   true_te = data[[4]]
+  te_t[,j] = true_te
+  ate_t[j] = mean(true_te)
+  se_te_t[j] = sd(true_te)
+  
   n_obs = seq(1, nrow(X), 1)
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
   dml_estimator  = dml_ens_ml(Y, D, X, ps_methods_1, oc_methods_1, ml_methods)
    
   # update list of estimates for current simulation round
-  ate_ens_1[j] = dml_estimator$ate_ens                      # estimated effect theta in current simulation round
-  ate_lasso_1[j] = dml_estimator$ate_lasso
-  ate_xgb_1[j] = dml_estimator$ate_xgb
-  ate_nn_1[j] = dml_estimator$ate_nn
-  te_ens_1[,j] = dml_estimator$te_ens
-  te_lasso_1[,j] = dml_estimator$te_lasso
-  te_xgb_1[,j] = dml_estimator$te_xgb
-  te_nn_1[,j] = dml_estimator$te_nn
+  ate_ens_1[j,] = do.call(cbind, dml_estimator$ate)                   # estimated effect theta in current simulation round
+  ate_lasso_1[j] = dml_estimator$ate$lasso
+  ate_xgb_1[j] = dml_estimator$ate$xgb
+  ate_nn_1[j] = dml_estimator$ate$nn
+  te_ens_1[,j] = dml_estimator$te$ens
+  te_lasso_1[,j] = dml_estimator$te$lasso
+  te_xgb_1[,j] = dml_estimator$te$xgb
+  te_nn_1[,j] = dml_estimator$te$nn
   se_po_ens_1[j,] = dml_estimator$se_po[1,]
   se_po_lasso_1[j,] = dml_estimator$se_po[2,]
   se_po_xgb_1[j,] = dml_estimator$se_po[3,]
