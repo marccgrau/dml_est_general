@@ -31,7 +31,7 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
     dtype = tf$float32
   )
   
-  early_stop <- callback_early_stopping(monitor = "val_loss", patience = 30)
+  early_stop <- callback_early_stopping(monitor = "val_loss", patience = 15)
   
   lowest_errors = rep(NA, nrow(grid_nn))
   
@@ -43,21 +43,26 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
                         act.fct2 = grid_nn$act.fct2[i],
                         act.fctfinal = grid_nn$act.fctfinal[i], 
                         loss.fct = grid_nn$loss.fct[i], 
-                        eval.metric = grid_nn$eval.metric[i]
+                        eval.metric = grid_nn$eval.metric[i],
+                        l1_1 = grid_nn$l1_1[i],
+                        l1_2 = grid_nn$l1_2[i]
     )
+    
     model %>% fit(
       x = df_tr %>% dplyr::select(-label),
       y = df_tr$label,
       epochs = 500,
       validation_split = 0.2,
+      batch_size = 4,
       verbose = 0,
       callbacks = list(early_stop)
     )
+    
     preds = model %>% predict(df_te %>% dplyr::select(-label))
-    if (grid_nn$act.output[i]){
-      lowest_errors[i] = LogLoss(preds, y_te)
-    } else {
+    if (is.null(grid_nn$act.fctfinal[i])){
       lowest_errors[i] = rmse_calc(y_te, preds)
+    } else {
+      lowest_errors[i] = LogLoss(preds, y_te)
     }
   }
   
@@ -74,7 +79,9 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
                      act.fct2 = bestparams$act.fct2, 
                      act.fctfinal = bestparams$act.fctfinal,  
                      loss.fct = bestparams$loss.fct, 
-                     eval.metric = bestparams$eval.metric)
+                     eval.metric = bestparams$eval.metric,
+                     l1_1 = bestparams$l1_1,
+                     l1_2 = bestparams$l1_2)
   
   return(finalparams)
 }

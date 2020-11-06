@@ -1,14 +1,16 @@
 grid_keras_oc_1 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(50, 70, 90),
-    units2 = c(50, 70, 90),
-    act.fct1 = "sigmoid",
-    act.fct2 = "sigmoid",
-    act.fctfinal = "sigmoid",
+    units1 = c(128),
+    units2 = c(128),
+    act.fct1 = c("relu"),
+    act.fct2 = c("sigmoid"),
+    act.fctfinal = NA,
     act.output = FALSE,
     loss.fct = "mse",
-    eval.metric = "mean_squared_error"
+    eval.metric = "mean_absolute_error",
+    l1_1 = c(0.0001, 0),
+    l1_2 = c(0.0001, 0)
   )
   
   # expand the grid according to defined hyperparameters
@@ -19,14 +21,15 @@ grid_keras_oc_1 = function(){
 grid_keras_ps_1 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(50, 100),
-    units2 = c(50, 100),
-    act.fct1 = c("sigmoid"),
+    units1 = c(128),
+    units2 = c(128),
+    act.fct1 = c("relu"),
     act.fct2 = c("sigmoid"),
-    act.fctfinal = "sigmoid",
-    act.output = TRUE,
+    act.fctfinal = c("sigmoid"),
     loss.fct = "binary_crossentropy",
-    eval.metric = "binary_crossentropy"
+    eval.metric = "binary_crossentropy",
+    l1_1 = c(0.0001, 0),
+    l1_2 = c(0.0001, 0)
   )
   
   # expand the grid according to defined hyperparameters

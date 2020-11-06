@@ -1,4 +1,4 @@
-dml_ens_ml = function(y, d, x, ps_methods, oc_methods, ml_methods) {
+dml_ens_ml = function(y, d, x, ps_methods, oc_methods, ml_methods, ens_folds = 2) {
   # Double Machine Learning estimator using the efficient score function as introduced by Chernozhukov et al. (2018)
   # Implementation inspired by Knaus DML for multiple treatments https://github.com/MCKnaus/dmlmt 
   # check if the given treatment vector is binary
@@ -29,13 +29,13 @@ dml_ens_ml = function(y, d, x, ps_methods, oc_methods, ml_methods) {
     names(p_hat_aux) = ml_methods
     
     # run the ensemble with main data for the model and aux data for the evaluation
-    p_hat_aux_ensemble = ensemble(ps_methods, x = x_main, y = d_main, xnew = x_aux) # predict the propensity score with main model, aux data
+    p_hat_aux_ensemble = ensemble(ps_methods, x = x_main, y = d_main, xnew = x_aux, nfolds = ens_folds) # predict the propensity score with main model, aux data
     # extract predictions for ensemble
     p_hat_aux[[1]][,1] = p_hat_aux_ensemble$ensemble # extract prediction values
     p_hat_aux[[1]][,2] = 1 - p_hat_aux[[1]][,1] # retrieve 1-p(x) for main model and aux data
     
     # run the ensemble with switched data sets
-    p_hat_main_ensemble = ensemble(ps_methods, x = x_aux, y = d_aux, xnew = x_main) # predict the propensity score with aux model, main data
+    p_hat_main_ensemble = ensemble(ps_methods, x = x_aux, y = d_aux, xnew = x_main, nfolds = ens_folds) # predict the propensity score with aux model, main data
     p_hat_main[[1]][,1] = p_hat_main_ensemble$ensemble # extract prediction values
     p_hat_main[[1]][,2] = 1 - p_hat_main[[1]][,1] # retrieve 1-p(x) for aux model and main data
     
@@ -63,10 +63,10 @@ dml_ens_ml = function(y, d, x, ps_methods, oc_methods, ml_methods) {
       # only use either treated or non-treated as groups (i = 1,2)
       # derive the model with the main data set and predict the outcomes with the auxiliary data set
       # the prediction will be made with data of both treated and controls to receive potential outcomes
-      y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1], xnew = x_aux)
+      y_hat_aux_ensemble = ensemble(oc_methods, x = x_main[treatment_main[,i] == 1, ], y = y_main[treatment_main[,i] == 1], xnew = x_aux, nfolds = ens_folds)
       y_hat_aux[[1]][,i] = y_hat_aux_ensemble$ensemble
       # same procedure as above but with switched data sets for cross-fitting purposes
-      y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1], xnew = x_main)
+      y_hat_main_ensemble = ensemble(oc_methods, x = x_aux[treatment_aux[,i] == 1, ], y = y_aux[treatment_aux[,i] == 1], xnew = x_main, nfolds = ens_folds)
       y_hat_main[[1]][,i] = y_hat_main_ensemble$ensemble
       
       for(j in 1:(length(ml_methods) - 1)){
@@ -125,10 +125,12 @@ dml_ens_ml = function(y, d, x, ps_methods, oc_methods, ml_methods) {
     se_mu_main = matrix(NA, nrow = length(ml_methods), ncol = length(unique(d)))
     se_mu_aux = matrix(NA, nrow = length(ml_methods), ncol = length(unique(d)))
     for (i in 1:length(unique(d))){
-      res_main = lapply(mu_mat_main, FUN = function(x){sd(x[,i])})
-      se_mu_main[,i] = do.call(rbind, res_main)
-      res_aux = lapply(mu_mat_aux, FUN = function(x){sd(x[,i])})
-      se_mu_aux[,i] = do.call(rbind, res_aux)
+      for (j in 1:length(ml_methods)) {
+        se_mu_main[j,i] = sqrt(sum((mu_mat_main[[j]][,i] - mean(y_main))^2)/nrow(x_main))
+      }
+      for (j in 1:length(ml_methods)) {
+        se_mu_aux[j,i] = sqrt(sum((mu_mat_aux[[j]][,i] - mean(y_aux))^2)/nrow(x_main))
+      }
     }
     
     se_mu = (se_mu_main + se_mu_aux)/2

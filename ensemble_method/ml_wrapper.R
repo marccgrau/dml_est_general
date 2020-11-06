@@ -319,15 +319,18 @@ nn_keras_fit = function(x,y,args=list()) {
                       act.fct2 = args$act.fct2,
                       act.fctfinal = args$act.fctfinal, 
                       loss.fct = args$loss.fct, 
-                      eval.metric = args$eval.metric)
+                      eval.metric = args$eval.metric,
+                      l1_1 = args$l1_1,
+                      l1_2 = args$l1_2)
   
-  early_stop <- callback_early_stopping(monitor = "val_loss", patience = 30)
+  early_stop <- callback_early_stopping(monitor = "val_loss", patience = 15)
   
   model %>% fit(
     x = data %>% dplyr::select(-label),
     y = data$label,
     epochs = 500,
     validation_split = 0.2,
+    batch_size = 4,
     verbose = 0,
     callbacks = list(early_stop)
   )

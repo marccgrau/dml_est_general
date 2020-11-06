@@ -11,7 +11,7 @@ ensemble = function(ml,
   for (i in 1:length(ml)) {
     if (!is.null(ml[[i]]$name)) colnames(fit_cv)[i] = ml[[i]]$name
   }
-  
+   
   # Get CV folds
   cvf = prep_cf_mat(length(y),nfolds)
   

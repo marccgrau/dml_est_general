@@ -166,15 +166,24 @@ interact.all <- function(input){
 #'
 
 build_model <- function(data, spec, 
-                        units1, units2, act.fct1 = "sigmoid", act.fct2 = "sigmoid", act.fctfinal = NULL, 
-                        loss.fct = "mse", eval.metric = "mean_squared_error") {
-  input <- layer_input_from_dataset(data %>% dplyr::select(-label))
+                        units1, units2, act.fct1 = "sigmoid", act.fct2 = "sigmoid", act.fctfinal = NA, 
+                        loss.fct = "mse", eval.metric = "mean_absolute_error", l1_1, l1_2) {
   
-  output <- input %>% 
-    layer_dense_features(dense_features(spec)) %>% 
-    layer_dense(units = units1, activation = act.fct1) %>%
-    layer_dense(units = units2, activation = act.fct2) %>%
-    layer_dense(units = 1, activation = act.fctfinal) 
+  input <- layer_input_from_dataset(data %>% dplyr::select(-label))
+  if(is.na(act.fctfinal)){
+    output <- input %>% 
+      layer_dense_features(dense_features(spec)) %>% 
+      layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+      layer_dense(units = units2, activation = act.fct2, kernel_regularizer = regularizer_l1(l1_2)) %>%
+      layer_dense(units = 1)
+  } else {
+    output <- input %>% 
+      layer_dense_features(dense_features(spec)) %>% 
+      layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+      layer_dense(units = units2, activation = act.fct2, kernel_regularizer = regularizer_l1(l1_2)) %>%
+      layer_dense(units = 1, activation = act.fctfinal) 
+  }
+
   
   model <- keras_model(input, output)
   
