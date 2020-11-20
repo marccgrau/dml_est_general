@@ -56,7 +56,7 @@
 
 toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
             "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
-            "keras", "tfdatasets", "data.table")
+            "keras", "tfdatasets", "data.table", "lessR")
 toinstall <- toload[which(toload %in% installed.packages()[,1] == F)]
 lapply(toinstall, install.packages, character.only = TRUE)
 lapply(toload, require, character.only = TRUE)
@@ -82,6 +82,7 @@ source("hyperparam_tuning/hyperparam_tuning.R")
 
 # DML estimator
 source("doubleML/dml_ens_ml.R")
+source("doubleML/dml_ens_trim.R")
 
 # Ensemble learner
 source("ensemble_method/ensemble.R")
@@ -136,8 +137,8 @@ for(i in 1:length(ml_methods)) {
 }
 
 
-oc_ensemble_1 = matrix(NA, n_simulations, length(oc_methods))
-ps_ensemble_1 = matrix(NA, n_simulations, length(ps_methods)) 
+oc_ensemble = matrix(NA, n_simulations, length(oc_methods))
+ps_ensemble = matrix(NA, n_simulations, length(ps_methods)) 
 
 # empty matrices to store effective values of treatment
 te_t = matrix(NA, n_observations, n_simulations)
@@ -165,7 +166,7 @@ for (j in 1:n_simulations) {
   rm(data)
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
-  dml_estimator  = dml_ens_ml(Y, D, X, ps_methods, oc_methods, ml_methods, ens_folds = 2)
+  dml_estimator  = dml_ens_trim(Y, D, X, ps_methods, oc_methods, ml_methods, ens_folds = 2, trim = 0.05)
    
   # update list of estimates for current simulation round
   ate[j,] = do.call(cbind, dml_estimator$ate)                   # estimated effect theta in current simulation round
@@ -182,6 +183,7 @@ for (j in 1:n_simulations) {
   se_po_xgb[j,] = dml_estimator$se_po[3,]
   se_po_nn[j,] = dml_estimator$se_po[4,]
   se_te_ens[j] = dml_estimator$se_te[1]
+  
   se_te_lasso[j] = dml_estimator$se_te[2]
   se_te_xgb[j] = dml_estimator$se_te[3]
   se_te_nn[j] = dml_estimator$se_te[4]
@@ -196,26 +198,19 @@ toc()
 
 #### Results
 # Average treatment effect 50/50
-avg_effect_ens_1 = mean(ate_ens_1)                          
-avg_effect_lasso_1 = mean(ate_lasso_1)
-avg_effect_xgb_1 = mean(ate_xgb_1)
-avg_effect_nn_1 = mean(ate_nn_1)
+avg_effect_t = mean(ate_t)
+avg_effect_ens = mean(ate_ens)                          
+avg_effect_lasso = mean(ate_lasso)
+avg_effect_xgb = mean(ate_xgb)
+avg_effect_nn = mean(ate_nn)
 
 # Ensemble weights of E[Y|X]
 oc_ensemble_weights = as.data.frame(t(colMeans(oc_ensemble)))
-for (i in 1:length(oc_methods)) {
-  if (!is.null(oc_methods[[i]]$name)) colnames(oc_ensemble_weights)[i] = oc_methods[[i]]$name
-  oc_ensemble = as.data.frame(oc_ensemble)
-  colnames(oc_ensemble)[i] = oc_methods[[i]]$name
-}
+colnames(oc_ensemble) = ml_methods[-1]
 
 # Ensemble weights of E[D|X]
 ps_ensemble_weights = as.data.frame(t(colMeans(ps_ensemble)))
-for (i in 1:length(ps_methods)) {
-  if (!is.null(ps_methods[[i]]$name)) colnames(ps_ensemble_weights)[i] = ps_methods[[i]]$name
-  ps_ensemble = as.data.frame(ps_ensemble)
-  colnames(ps_ensemble)[i] = ps_methods[[i]]$name
-}
+colnames(ps_ensemble) = ml_methods[-1]
 
 # Print the results
 paste("Average treatment effect:", round(avg_effect_ens, 3))
@@ -241,8 +236,8 @@ output_se_te = cbind(se_te_t, se_te_ens, se_te_lasso, se_te_xgb, se_te_nn)
 fwrite(as.data.table(output_se_te), file = file.path(directory_path, folder, "se_te.csv"))
 
 # Each ensembles weights
-fwrite(ps_ensemble, file = file.path(directory_path, folder, "ps_ensemble.csv"))
-fwrite(oc_ensemble, file = file.path(directory_path, folder, "oc_ensemble.csv"))
+fwrite(as.data.table(ps_ensemble), file = file.path(directory_path, folder, "ps_ensemble.csv"))
+fwrite(as.data.table(oc_ensemble), file = file.path(directory_path, folder, "oc_ensemble.csv"))
 
 # Simulation 1; 10/90 -----------------------------------------------
 

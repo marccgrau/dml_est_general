@@ -144,7 +144,7 @@ lasso_inter_fit = function(x,y,args=list()) {
   tmp = as.matrix(cbind(x, inter_poly))
 
   
-  lasso_inter = do.call(cv.glmnet,c(list(x=tmp,y=y),args = args))
+  lasso_inter = do.call(cv.glmnet, args = c(list(x=tmp,y=y), args))
   lasso_inter
 }
 
