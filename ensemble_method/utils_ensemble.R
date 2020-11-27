@@ -148,6 +148,7 @@ prep_cf_mat = function(n,cf,cl=NULL) {
   return(cf_mat)
 }
 
+# interacts all inputted variables with each other and forms second order polynomials
 
 interact.all <- function(input){
   output <- do.call("cbind", lapply(1:ncol(input), FUN=function(z){ 

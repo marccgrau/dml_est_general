@@ -159,7 +159,7 @@ predict.lasso_inter_fit = function(lasso_inter_fit,x,y,xnew=NULL,weights=FALSE) 
       tmp = as.matrix(cbind(xnew, inter_poly))
       }
   
-  fit = predict(lasso_inter_fit, newx = tmp, type = "response", s = "lambda.1se")
+  fit = predict(lasso_inter_fit, newx = tmp, type = "response", s = "lambda.min")
   
   list("prediction"=fit,"weights"="No weighted representation of Lasso available.")
 }
