@@ -1,8 +1,8 @@
 grid_keras_oc_1 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(128),
-    units2 = c(128),
+    units1 = c(32),
+    units2 = c(32),
     act.fct1 = c("relu"),
     act.fct2 = c("sigmoid"),
     act.fctfinal = NA,
@@ -21,8 +21,8 @@ grid_keras_oc_1 = function(){
 grid_keras_ps_1 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(128),
-    units2 = c(128),
+    units1 = c(32),
+    units2 = c(32),
     act.fct1 = c("relu"),
     act.fct2 = c("sigmoid"),
     act.fctfinal = c("sigmoid"),

@@ -110,7 +110,7 @@ randomsearch_xgb_oc_3 = function(){
                   colsample_bytree = runif(1, 0.6, 1),
                   min_child_weight = sample(0:10, 1),
                   alpha = sample(0:6, 1),
-                  nrounds= 300,
+                  nrounds= 500,
                   eval_metric = "rmse",
                   early_stopping_rounds= 30
     )
@@ -135,7 +135,7 @@ randomsearch_xgb_ps_3 = function(){
                   colsample_bytree = runif(1, 0.6, 1),
                   min_child_weight = sample(0:10, 1),
                   alpha = sample(0:6, 1),
-                  nrounds= 300,
+                  nrounds= 500,
                   eval_metric = "error",
                   early_stopping_rounds= 30
     )
