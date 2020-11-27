@@ -65,8 +65,8 @@ dml_ens_trim = function(y, d, x, ps_methods, oc_methods, ml_methods, ens_folds =
       trim_val_aux[,1] = quantile(p_hat_aux[[i]][,1], trim)
       trim_val_aux[,2] = quantile(p_hat_aux[[i]][,1], 1-trim)
       
-      trim_mat_main[,i] = (p_hat_main[[i]][,1] > trim_val_main[,1] & p_hat_main[[i]][,1] < trim_val_main[,2])
-      trim_mat_aux[,i] = (p_hat_aux[[i]][,1] > trim_val_aux[,1] & p_hat_aux[[i]][,1] < trim_val_aux[,2])
+      trim_mat_main[,i] = (p_hat_main[[i]][,1] >= trim_val_main[,1] & p_hat_main[[i]][,1] <= trim_val_main[,2])
+      trim_mat_aux[,i] = (p_hat_aux[[i]][,1] >= trim_val_aux[,1] & p_hat_aux[[i]][,1] <= trim_val_aux[,2])
     }
     
     # estimate the potential outcome 
