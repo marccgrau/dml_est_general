@@ -41,6 +41,6 @@ generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sig
     
     true_te = taufunc(X)
     
-  return(list(Y, D, X, true_te))
+  return(list(Y, D, X, true_te, ps))
 }
 
