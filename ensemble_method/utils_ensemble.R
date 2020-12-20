@@ -163,7 +163,7 @@ interact.all <- function(input){
 
 
 #' Model construction for Keras
-#' creates model structure as defined with given paramters
+#' creates model structure as defined with given parameters
 #'
 
 build_model <- function(data, spec, 
@@ -191,7 +191,7 @@ build_model <- function(data, spec,
   model %>% 
     compile(
       loss = loss.fct,
-      optimizer = optimizer_rmsprop(),
+      optimizer = optimizer_adam(lr = 0.01),
       metrics = list(eval.metric)
     )
   

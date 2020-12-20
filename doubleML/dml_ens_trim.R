@@ -1,4 +1,4 @@
-dml_ens_trim = function(y, d, x, ps_methods, oc_methods, ml_methods, ens_folds = 2, trim = 0.01) {
+dml_ens_trim = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods, ens_folds = 2, trim = 0.01) {
   # Double Machine Learning estimator using the efficient score function as introduced by Chernozhukov et al. (2018)
   # Implementation inspired by Knaus DML for multiple treatments https://github.com/MCKnaus/dmlmt 
   # check if the given treatment vector is binary
@@ -8,14 +8,20 @@ dml_ens_trim = function(y, d, x, ps_methods, oc_methods, ml_methods, ens_folds =
     n = length(y)
     fold = model.matrix(~0 + factor(ntile(runif(n),2)))[,1]
     
-    x_main <- x[!fold, ]
-    x_aux <- x[as.logical(fold), ]
+    x_main = x[!fold, ]
+    x_aux = x[as.logical(fold), ]
     
-    y_main <- y[!fold]
-    y_aux <- y[as.logical(fold)]
+    y_main = y[!fold]
+    y_aux = y[as.logical(fold)]
     
-    d_main <- d[!fold]
-    d_aux <- d[as.logical(fold)]
+    d_main = d[!fold]
+    d_aux = d[as.logical(fold)]
+    
+    true_p_main = true_p[!fold]
+    true_p_aux = true_p[as.logical(fold)]
+    
+    true_te_main = true_te[!fold]
+    true_te_aux = true_te[as.logical(fold)]
     
     # get dummy for treated (d) and controls (1-d)
     treatment_main = cbind(d_main, 1-d_main)
@@ -170,29 +176,34 @@ dml_ens_trim = function(y, d, x, ps_methods, oc_methods, ml_methods, ens_folds =
       te_mat_aux[[j]] = mu_mat_aux[[j]][,1] - mu_mat_aux[[j]][,2]
     }
     
-    se_te_main = matrix(NA, nrow = length(ml_methods), 1)
-    se_te_aux = matrix(NA, nrow = length(ml_methods), 1)
-    se_te_main = do.call(rbind, lapply(te_mat_main, FUN = function(x){sd(x)}))
-    se_te_aux = do.call(rbind, lapply(te_mat_aux, FUN = function(x){sd(x)}))
+    te = lapply(seq_along(te_mat_main), function(x) c(te_mat_main[[x]], te_mat_aux[[x]]))
+    names(te) <- names(te_mat_main)
     
-    se_te = (se_te_main + se_te_aux)/2
+    se_te = matrix(NA, nrow = length(ml_methods), 1)
+    se_te = do.call(rbind, lapply(te, FUN = function(x){sd(x)}))
+
     colnames(se_te) = c("se_te")
     rownames(se_te) = c("ensemble", "lasso", "xgb", "nn")
     
     # get the cross-fitted average treatment effect
-    ate_main = lapply(te_mat_main, FUN = function(x){mean(x)})
-    ate_aux = lapply(te_mat_aux, FUN = function(x){mean(x)})
-    
-    # merge cross-fitted results
-    ate = mapply(function(x,y) mean(c(x,y)), ate_main, ate_aux, SIMPLIFY = FALSE)
-    te = lapply(Map(cbind,te_mat_main, te_mat_aux), rowMeans)
+    ate = mapply(function(x) mean(x), te, SIMPLIFY = FALSE)
     
     # extract weights of ensemble
     w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
     w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
     
+    # estimated propensity scores and potential outcome of ensemble
+    y_hat_ens = c(y_hat_main[[1]][,1][trim_mat_main[,1]], y_hat_aux[[1]][,1][trim_mat_aux[,1]])
+    p_hat_ens = c(p_hat_main[[1]][,1][trim_mat_main[,1]], p_hat_aux[[1]][,1][trim_mat_aux[,1]])
+    
+    # true values with trimmer applied for further analysis
+    true_p_trim = c(true_p_main[trim_mat_main[,1]], true_p_aux[trim_mat_aux[,1]])
+    y_t_trim = c(y_main[trim_mat_main[,1]], y_aux[trim_mat_aux[,1]])
+    te_t_trim = c(true_te_main[trim_mat_main[,1]], true_te_aux[trim_mat_aux[,1]])
+    
     # define single output
-    output = list("ate" = ate, "te" = te, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu)
+    output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens, "p_t_trim" = true_p_trim, "y_t_trim" = y_t_trim,
+                  "te_t_trim" = te_t_trim, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu)
     
     return(output)
     
