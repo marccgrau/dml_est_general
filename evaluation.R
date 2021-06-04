@@ -6,7 +6,8 @@
 
 toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
             "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
-            "keras", "tfdatasets", "data.table", "ggthemes")
+            "keras", "tfdatasets", "data.table", "lessR", "ggthemes", "tictoc",
+            "RSQLite", "RColorBrewer")
 toinstall <- toload[which(toload %in% installed.packages()[,1] == F)]
 lapply(toinstall, install.packages, character.only = TRUE)
 lapply(toload, require, character.only = TRUE)
@@ -21,14 +22,19 @@ ml_names = c("Ensemble", "Lasso", "XGBoost", "Neural Network")
 # Results simulation 1: -----------------------------------------------------------
 # read in the results
 folder = "output/sim_50_1"
-ate_1 = fread(file = file.path(directory_path, folder, "ate.csv"))
-te_ens_1 = fread(file = file.path(directory_path, folder, "te_ens.csv"))
-te_lasso_1 = fread(file = file.path(directory_path, folder, "te_lasso.csv"))
-te_xgb_1 = fread(file = file.path(directory_path, folder, "te_xgb.csv"))
-te_nn_1 = fread(file = file.path(directory_path, folder, "te_nn.csv"))
-se_te_1 = fread(file = file.path(directory_path, folder, "se_te.csv"))
-ps_ensemble_1 = fread(file = file.path(directory_path, folder, "ps_ensemble.csv"))
-oc_ensemble_1 = fread(file = file.path(directory_path, folder, "oc_ensemble.csv"))
+# start db for 50/50 Simulation
+db50_1 = dbConnect(SQLite(), dbname = file.path(folder, "db50_1"))
+
+
+ate_1 = dbGetQuery(db50_1, "SELECT * FROM average_te")
+te_ens_1 = dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_ens")
+te_lasso_1 = dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_lasso")
+te_xgb_1 = dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_xgb")
+te_nn_1 = dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_nn")
+se_te_1 = dbGetQuery(db50_1, "SELECT * FROM standerror_te")
+po_te_1 = dbGetQuery(db50_1, "SELECT * FROM standerror_po")
+ps_ensemble_1 = dbGetQuery(db50_1, "SELECT * FROM propensity_ensemble")
+oc_ensemble_1 = dbGetQuery(db50_1, "SELECT * FROM outcome_ensemble")
 
 ## Ensemble bar chart
 figure_path = "output/sim_50_1/figures"

@@ -314,14 +314,11 @@ nn_keras_fit = function(x,y,args=list()) {
   model = build_model(data, 
                       spec, 
                       units1 = args$units1, 
-                      units2 = args$units2, 
                       act.fct1 = args$act.fct1, 
-                      act.fct2 = args$act.fct2,
                       act.fctfinal = args$act.fctfinal, 
                       loss.fct = args$loss.fct, 
                       eval.metric = args$eval.metric,
-                      l1_1 = args$l1_1,
-                      l1_2 = args$l1_2)
+                      l1_1 = args$l1_1)
   
   early_stop <- callback_early_stopping(monitor = "val_loss", patience = 15)
   

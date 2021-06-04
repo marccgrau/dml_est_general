@@ -56,8 +56,9 @@ ensemble = function(ml,
     if (isTRUE(weights)) w = fit_full$weights[[1]]
   }
 
-  list("ensemble" = ensemble,"best" = best,"fit_full" = fit_full,"weights" = w,
+  output = list("ensemble" = ensemble,"best" = best,"fit_full" = fit_full,"weights" = w,
        "nnls_weights" = nnls_weights, "mse_cv" = mse_cv, "fit_cv" = fit_cv)
+  return(output)
 }
 
 
@@ -87,7 +88,11 @@ ensemble_core = function(ml,
     weights_list[[i]] = temp$weights
   }
   
-  list("predictions" = fit_mat, "weights" = weights_list)
+  rm(temp, fit)
+  gc()
+  
+  output = list("predictions" = fit_mat, "weights" = weights_list)
+  return(output)
 }
 
 

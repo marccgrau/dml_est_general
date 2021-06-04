@@ -38,14 +38,11 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
   for (i in 1:nrow(grid_nn)){
     model = build_model(df_tr, spec, 
                         units1 = grid_nn$units1[i], 
-                        units2 = grid_nn$units2[i], 
                         act.fct1 = grid_nn$act.fct1[i], 
-                        act.fct2 = grid_nn$act.fct2[i],
                         act.fctfinal = grid_nn$act.fctfinal[i], 
                         loss.fct = grid_nn$loss.fct[i], 
                         eval.metric = grid_nn$eval.metric[i],
-                        l1_1 = grid_nn$l1_1[i],
-                        l1_2 = grid_nn$l1_2[i]
+                        l1_1 = grid_nn$l1_1[i]
     )
     
     model %>% fit(
@@ -73,15 +70,13 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
   bestparams = gridsearch[which.min(lowest_errors), ]
   
   # output the best hyperparameter set
-  finalparams = list(units1 = bestparams$units1, 
-                     units2 = bestparams$units2, 
+  finalparams = list(units1 = bestparams$units1,
                      act.fct1 = bestparams$act.fct1, 
-                     act.fct2 = bestparams$act.fct2, 
                      act.fctfinal = bestparams$act.fctfinal,  
                      loss.fct = bestparams$loss.fct, 
                      eval.metric = bestparams$eval.metric,
-                     l1_1 = bestparams$l1_1,
-                     l1_2 = bestparams$l1_2)
+                     l1_1 = bestparams$l1_1
+                     )
   
   return(finalparams)
 }

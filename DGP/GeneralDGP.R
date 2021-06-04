@@ -15,27 +15,18 @@
 
 generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, w = 0) {
   
-  # construct the correlation matrix
-  init_matrix = qr.Q(qr(matrix(rnorm(n_covariates^2), n_covariates)))
-  cov_matrix = crossprod(init_matrix, init_matrix*(n_covariates:1))
-  corr_matrix = cov2cor(cov_matrix)
-  
-  copX = mvrnorm(n_observations, mu = rep(0, n_covariates), Sigma = corr_matrix)
-  uniforms = pnorm(copX)
-  
-
   X = matrix(NA, nrow = n_observations, ncol = n_covariates)
     for (i in 1:n_covariates){
       if(i %% 2 == 0) {
-        X[,i] = qbinom(uniforms[,i], 1, 0.5)
+        X[,i] = rbinom(n_observations, 1, 0.5)
       } else {
-        X[,i] = qnorm(uniforms[,i], 0, 1)
+        X[,i] = rnorm(n_observations, 0, 1)
       }
     }
     
     ps = propensity_func(X, psfunc, w)
     
-    D = rbinom(n_observations, 1, ps)
+    D = rbinom(n_observations, 1, ps) 
     
     Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
     

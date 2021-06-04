@@ -57,6 +57,7 @@ dml_ens_trim = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_met
       p_hat_aux[[i_loc]][,2] = 1 - p_hat_aux[[i_loc]][,1]
     }
     
+    
     # create the matrix of trimmed values
     trim_mat_main = matrix(NA, nrow = nrow(x_main), ncol = length(ml_methods))
     trim_mat_aux = matrix(NA, nrow = nrow(x_aux), ncol = length(ml_methods))
@@ -103,6 +104,8 @@ dml_ens_trim = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_met
         y_hat_aux[[j_loc]][,i] = y_hat_aux_ensemble$fit_full$predictions[,j]
       }
     }
+    
+    
     
     # estimations for the average treatment effect ate
     # calculate efficient score E[(y - mu_hat)/p(x) + mu_hat]
@@ -201,9 +204,24 @@ dml_ens_trim = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_met
     y_t_trim = c(y_main[trim_mat_main[,1]], y_aux[trim_mat_aux[,1]])
     te_t_trim = c(true_te_main[trim_mat_main[,1]], true_te_aux[trim_mat_aux[,1]])
     
+    
+    
     # define single output
     output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens, "p_t_trim" = true_p_trim, "y_t_trim" = y_t_trim,
                   "te_t_trim" = te_t_trim, "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu)
+    
+    # remove variables to free up memory
+    rm(p_hat_aux_ensemble, p_hat_main_ensemble)
+    rm(y_hat_aux_ensemble, y_hat_main_ensemble)
+    rm(p_hat_main, p_hat_aux)
+    rm(trim_mat_main, trim_mat_aux, trim_val_main, trim_val_aux)
+    rm(y_hat_main, y_hat_aux)
+    rm(ipw_mat_main, ipw_mat_aux, mu_mat_main, mu_mat_aux)
+    rm(se_mu_main, se_mu_aux, se_mu)
+    rm(te_mat_main, te_mat_aux)
+    rm(te, se_te, ate, w_ens_ps, w_ens_oc)
+    rm(y_hat_ens, p_hat_ens, true_p_trim, y_t_trim, te_t_trim)
+    gc()
     
     return(output)
     
