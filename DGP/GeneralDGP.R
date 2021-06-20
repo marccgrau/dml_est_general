@@ -13,7 +13,7 @@
 #' @param D_i treatment vector D_i ~ind Bernoulli(pi(X_i))
 #' @param Y_i outcome vector Y_i ~ind Normal(mu(X_i) + (D_i - 1/2)tau(X_i), sigma_Y^2 )
 
-generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, w = 0) {
+generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, smalltreat = FALSE) {
   
   X = matrix(NA, nrow = n_observations, ncol = n_covariates)
     for (i in 1:n_covariates){
@@ -23,15 +23,19 @@ generalDGP = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sig
         X[,i] = rnorm(n_observations, 0, 1)
       }
     }
+  
+  if (smalltreat == TRUE) {
+    D_prop <- pnorm(psfunc(X) - 1.65)
+    D <- as.numeric(rbinom(n_observations, prob = D_prop, size = 1))
+  } else {
+    D_prop <- pnorm(psfunc(X))
+    D <- as.numeric(rbinom(n_observations, prob = D_prop, size = 1))
+  }
+  
+  Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
+  
+  true_te = taufunc(X)
     
-    ps = propensity_func(X, psfunc, w)
-    
-    D = rbinom(n_observations, 1, ps) 
-    
-    Y = y_func(n_observations, X, D, mufunc, taufunc, sigma)
-    
-    true_te = taufunc(X)
-    
-  return(list(Y, D, X, true_te, ps))
+  return(list(Y, D, X, true_te, D_prop))
 }
 

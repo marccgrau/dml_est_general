@@ -57,7 +57,7 @@
 toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
             "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
             "keras", "tfdatasets", "data.table", "lessR", "ggthemes", "tictoc",
-            "RSQLite")
+            "RSQLite", "RColorBrewer")
 toinstall <- toload[which(toload %in% installed.packages()[,1] == F)]
 lapply(toinstall, install.packages, character.only = TRUE)
 lapply(toload, require, character.only = TRUE)
@@ -95,7 +95,7 @@ source("ensemble_method/utils_ensemble.R")
 
 ### Define necessary parameters
 ## Monte Carlo Simulation
-n_simulations = 500                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 1                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 15                    # Number of confounders
@@ -111,49 +111,6 @@ ml_methods = c("ens", "lasso", "xgb", "nn")
 
 # Simulation 1; 50/50 -----------------------------------------------
 
-## create empty matrices to fill throughout the simulation
-# average treatment effect
-for(i in 1:length(ml_methods)) { 
-  nam <- paste("ate_", ml_methods[i], sep = "")
-  assign(nam, rep(NA, n_simulations))
-}
-# treatment effects
-for(i in 1:length(ml_methods)) { 
-  nam <- paste("te_", ml_methods[i], sep = "")
-  assign(nam, matrix(NA, (n_observations*(1-(2*trimmer))/2), n_simulations))
-}
-# standard error potential outcomes
-for(i in 1:length(ml_methods)) { 
-  nam <- paste("se_po_", ml_methods[i], sep = "")
-  assign(nam, matrix(NA, n_simulations, 2))
-}
-
-for(i in 1:length(ml_methods)) { 
-  nam <- paste("se_te_", ml_methods[i], sep = "")
-  assign(nam, rep(NA, n_simulations))
-}
-
-# Hyperparameter Tuning for DGP 1
-hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, w = 0)
-ps_methods = hyperparams$ps_methods
-oc_methods = hyperparams$oc_methods
-
-oc_ensemble = matrix(NA, n_simulations, length(oc_methods))
-ps_ensemble = matrix(NA, n_simulations, length(ps_methods)) 
-
-# empty matrices to store effective values of treatment
-te_t = matrix(NA, n_observations, n_simulations)
-p_t = matrix(NA, n_observations, n_simulations)
-ate_t = rep(NA, n_simulations)
-se_te_t = rep(NA, n_simulations)
-
-# empty matrices to store values for estimated conditional outcome and propensity score of ensemble
-y_ens = rep(NA, n_observations*(1-(2*trimmer)))
-p_ens = rep(NA, n_observations*(1-(2*trimmer)))
-
-ate = matrix(NA, n_simulations,length(ml_methods))
-colnames(ate) = ml_methods
-
 # create first simulation entry to later append all further simulations
 # necessary due to computational restrictions
 folder = "output/sim_50_1" # set folder to store values
@@ -163,12 +120,45 @@ colnames_sim = to("sim_", until = n_simulations, from = 1)
 # start db for 50/50 Simulation
 db50_1 = dbConnect(SQLite(), dbname = file.path(folder, "db50_1"))
 
+# Hyperparameter Tuning for DGP 1
+hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, w = 0)
+ps_methods = hyperparams$ps_methods
+oc_methods = hyperparams$oc_methods
+
+fwrite(as.data.table(ps_methods[[1]]$args), file = file.path(directory_path, folder, "ps_lasso_hyperparams.csv"))
+fwrite(as.data.table(ps_methods[[2]]$args), file = file.path(directory_path, folder, "ps_xgb_hyperparams.csv"))
+fwrite(as.data.table(ps_methods[[3]]$args), file = file.path(directory_path, folder, "ps_nn_hyperparams.csv"))
+fwrite(as.data.table(oc_methods[[1]]$args), file = file.path(directory_path, folder, "oc_lasso_hyperparams.csv"))
+fwrite(as.data.table(oc_methods[[2]]$args), file = file.path(directory_path, folder, "oc_xgb_hyperparams.csv"))
+fwrite(as.data.table(oc_methods[[3]]$args), file = file.path(directory_path, folder, "oc_nn_hyperparams.csv"))
+rm(hyperparams)
+gc()
+
+# empty vectors for ensemble weights
+oc_ensemble = matrix(NA, 1, length(oc_methods))
+ps_ensemble = matrix(NA, 1, length(ps_methods)) 
+
+# empty matrices to store effective values of treatment
+te_t_trim = matrix(NA, n_observations*(1-(2*trimmer)))
+p_t_trim = matrix(NA, n_observations*(1-(2*trimmer)))
+y_t_trim = matrix(NA, n_observations*(1-(2*trimmer)))
+ate_t = rep(NA, n_simulations)
+se_te_t = rep(NA, n_simulations)
+
+# empty matrices to store values for estimated conditional outcome and propensity score of ensemble
+y_ens = rep(NA, n_observations*(1-(2*trimmer)))
+p_ens = rep(NA, n_observations*(1-(2*trimmer)))
+
+ate = matrix(NA, 1, length(ml_methods))
+colnames(ate) = ml_methods
+
+
 for (j in 1:1) {
   ###########
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = 0)
+  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = FALSE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -255,19 +245,26 @@ for (j in 1:1) {
 
   print(paste("Simulation 1, 50/50, round: ", j))
   rm(dml_estimator)
+  rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
+     te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
+     se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, p_t_trim, y_t_trim, te_t_trim,
+     output_ate, output_se_te, output_se_po)
   gc()
   
 }
 
-
-
+dbDisconnect(db50_1)
+rm(db50_1)
+gc()
 tic()
 for (j in 2:n_simulations) {
+  
+  db50_1 = dbConnect(SQLite(), dbname = file.path(folder, "db50_1"))
   ###########
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = 0)
+  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -355,6 +352,8 @@ for (j in 2:n_simulations) {
   
   print(paste("Simulation 1, 50/50, round: ", j))
   rm(dml_estimator)
+  dbDisconnect(db50_1)
+  rm(db50_1)
   gc()
 }
 toc()
@@ -363,7 +362,7 @@ toc()
 # Simulation 1; 10/90 -----------------------------------------------
 
 # Hyperparameter Tuning for DGP 1
-hyperparams_small = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, w = -3.2)
+hyperparams_small = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds)
 ps_methods_small = hyperparams_small$ps_methods
 oc_methods_small = hyperparams_small$oc_methods
 

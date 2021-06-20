@@ -22,6 +22,11 @@ propensity_func = function(X, psfunc, w = 0){
   return(pi)
 }
 
+propensity_func_II = function(X, psfunc, mu = 0, s = 1){
+  pi = 1/(1 + exp(-(psfunc(X) - mu))/s)
+  return(pi)
+}
+
 y_func = function(n_obs, X, D, mufunc, taufunc, sigma = 1) {
   y = rnorm(n_obs, mean = mufunc(X) + (D - (1/2))*taufunc(X), sd = sigma)
   return(y)

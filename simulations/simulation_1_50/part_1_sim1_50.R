@@ -58,7 +58,7 @@ source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
 ### Define necessary parameters
 folder = "output/sim_50_1" # set folder to store values
 ## Monte Carlo Simulation
-n_simulations = 50                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 5                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 15                    # Number of confounders
@@ -83,7 +83,7 @@ colnames_sim = to("sim_", until = n_simulations, from = 1)
 db50_1 = dbConnect(SQLite(), dbname = file.path(folder, "db50_1"))
 
 # Hyperparameter Tuning for DGP 1
-hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, w = 0)
+hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, smalltreat = FALSE)
 ps_methods = hyperparams$ps_methods
 oc_methods = hyperparams$oc_methods
 
@@ -125,7 +125,7 @@ for (j in 1:1) {
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = 0)
+  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = FALSE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -155,7 +155,6 @@ for (j in 1:1) {
   se_po_xgb = dml_estimator$se_po[3,]
   se_po_nn = dml_estimator$se_po[4,]
   se_te_ens = dml_estimator$se_te[1]
-  
   se_te_lasso = dml_estimator$se_te[2]
   se_te_xgb = dml_estimator$se_te[3]
   se_te_nn = dml_estimator$se_te[4]
@@ -164,6 +163,16 @@ for (j in 1:1) {
   
   y_ens = dml_estimator$y_ens
   p_ens = dml_estimator$p_ens
+  
+  #confidence intervals
+  CI_up_ens = ate_ens + 1.96*(se_te_ens/sqrt(length(te_ens)))
+  CI_down_ens = ate_ens - 1.96*(se_te_ens/sqrt(length(te_ens)))
+  CI_up_lasso = ate_lasso + 1.96*(se_te_lasso/sqrt(length(te_lasso)))
+  CI_down_lasso = ate_lasso - 1.96*(se_te_lasso/sqrt(length(te_lasso)))
+  CI_up_xgb = ate_xgb + 1.96*(se_te_xgb/sqrt(length(te_xgb)))
+  CI_down_xgb = ate_xgb - 1.96*(se_te_xgb/sqrt(length(te_xgb)))
+  CI_up_nn = ate_nn + 1.96*(se_te_nn/sqrt(length(te_nn)))
+  CI_down_nn = ate_nn - 1.96*(se_te_nn/sqrt(length(te_nn)))
   
   # get trimmed true values for comparison
   p_t_trim = dml_estimator$p_t_trim
@@ -210,12 +219,27 @@ for (j in 1:1) {
   dbWriteTable(conn = db50_1, name = "te_true_trim", value = as.data.table(t(c(te_t_trim))), row.names = FALSE, header = FALSE,
                overwrite = TRUE, append = FALSE)
   
+  # confidence intervals
+  for (i in 1:length(ml_methods)){
+    temp = as.data.table(t(c(get(paste0("CI_up_", ml_methods[i])))))
+    dbWriteTable(conn = db50_1, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+                 overwrite = TRUE, append = FALSE)
+    rm(temp)
+  }
+  for (i in 1:length(ml_methods)){
+    temp = as.data.table(t(c(get(paste0("CI_down_", ml_methods[i])))))
+    dbWriteTable(conn = db50_1, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+                 overwrite = TRUE, append = FALSE)
+    rm(temp)
+  }
+  
   print(paste("Simulation 1, 50/50, round: ", j))
   rm(dml_estimator)
   rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
      te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
      se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, p_t_trim, y_t_trim, te_t_trim,
-     output_ate, output_se_te, output_se_po)
+     output_ate, output_se_te, output_se_po, CI_up_ens, CI_down_ens, CI_up_lasso, CI_down_lasso,
+     CI_up_xgb, CI_down_xgb, CI_up_nn, CI_down_nn)
   gc()
   
 }
@@ -231,7 +255,7 @@ for (j in 2:n_simulations) {
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, w = 0)
+  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = FALSE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -261,7 +285,6 @@ for (j in 2:n_simulations) {
   se_po_xgb = dml_estimator$se_po[3,]
   se_po_nn = dml_estimator$se_po[4,]
   se_te_ens = dml_estimator$se_te[1]
-  
   se_te_lasso = dml_estimator$se_te[2]
   se_te_xgb = dml_estimator$se_te[3]
   se_te_nn = dml_estimator$se_te[4]
@@ -270,6 +293,16 @@ for (j in 2:n_simulations) {
   
   y_ens = dml_estimator$y_ens
   p_ens = dml_estimator$p_ens
+  
+  #confidence intervals
+  CI_up_ens = ate_ens + 1.96*(se_te_ens/sqrt(length(te_ens)))
+  CI_down_ens = ate_ens - 1.96*(se_te_ens/sqrt(length(te_ens)))
+  CI_up_lasso = ate_lasso + 1.96*(se_te_lasso/sqrt(length(te_lasso)))
+  CI_down_lasso = ate_lasso - 1.96*(se_te_lasso/sqrt(length(te_lasso)))
+  CI_up_xgb = ate_xgb + 1.96*(se_te_xgb/sqrt(length(te_xgb)))
+  CI_down_xgb = ate_xgb - 1.96*(se_te_xgb/sqrt(length(te_xgb)))
+  CI_up_nn = ate_nn + 1.96*(se_te_nn/sqrt(length(te_nn)))
+  CI_down_nn = ate_nn - 1.96*(se_te_nn/sqrt(length(te_nn)))
   
   # get trimmed true values for comparison
   p_t_trim = dml_estimator$p_t_trim
@@ -317,8 +350,27 @@ for (j in 2:n_simulations) {
   dbWriteTable(conn = db50_1, name = "te_true_trim", value = as.data.table(t(c(te_t_trim))), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
   
+  # confidence intervals
+  for (i in 1:length(ml_methods)){
+    temp = as.data.table(t(c(get(paste0("CI_up_", ml_methods[i])))))
+    dbWriteTable(conn = db50_1, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+                 overwrite = TRUE, append = FALSE)
+    rm(temp)
+  }
+  for (i in 1:length(ml_methods)){
+    temp = as.data.table(t(c(get(paste0("CI_down_", ml_methods[i])))))
+    dbWriteTable(conn = db50_1, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+                 overwrite = TRUE, append = FALSE)
+    rm(temp)
+  }
+  
   print(paste("Simulation 1, 50/50, round: ", j))
   rm(dml_estimator)
+  rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
+     te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
+     se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, p_t_trim, y_t_trim, te_t_trim,
+     output_ate, output_se_te, output_se_po, CI_up_ens, CI_down_ens, CI_up_lasso, CI_down_lasso,
+     CI_up_xgb, CI_down_xgb, CI_up_nn, CI_down_nn)
   dbDisconnect(db50_1)
   rm(db50_1)
   gc()

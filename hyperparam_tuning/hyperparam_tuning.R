@@ -6,10 +6,10 @@ source("hyperparam_tuning/hyperparam_nnet_keras.R")
 source("hyperparam_tuning/gridframes_nn_keras.R")
 
 
-hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, w = 0){
+hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, smalltreat = FALSE){
   ## Data simulation for cross-validation of ml methods to select hyperparameters
   # Using the general DGP of Powers et al. (2018)
-  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, w)
+  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, smalltreat)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]

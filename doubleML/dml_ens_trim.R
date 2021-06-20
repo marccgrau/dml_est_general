@@ -166,8 +166,8 @@ dml_ens_trim = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_met
     
     # calculate te(D, theta, eta) = (g(1,X) - g(0,X)) + D(Y - g(1,X))/p(x) + (1-D)(Y - g(0,X))/(1-p(x)) - theta
     # which with moment and orthogonality condition fulfilled the difference between the two scores equals the treatment effect theta
-    te_mat_main = lapply(seq_along(ml_methods), function(f){f = matrix(NA, nrow(x_main), 1)})
-    te_mat_aux = lapply(seq_along(ml_methods), function(f){f = matrix(NA, nrow(x_aux), 1)})
+    te_mat_main = lapply(seq_along(ml_methods), function(f){f = matrix(NA, nrow(x_main[trim_mat_main[,1],]), 1)})
+    te_mat_aux = lapply(seq_along(ml_methods), function(f){f = matrix(NA, nrow(x_aux[trim_mat_main[,1],]), 1)})
     names(te_mat_main) = ml_methods
     names(te_mat_aux) = ml_methods
     # main
