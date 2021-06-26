@@ -45,8 +45,7 @@ source(file.path(directory_path, "hyperparam_tuning/hyperparam_tuning.R"))
 
 
 # DML estimator
-source(file.path(directory_path, "doubleML/dml_ens_ml.R"))
-source(file.path(directory_path, "doubleML/dml_ens_trim.R"))
+source(file.path(directory_path, "doubleML/dml_ens.R"))
 
 # Ensemble learner
 source(file.path(directory_path, "ensemble_method/ensemble.R"))
@@ -59,7 +58,7 @@ source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
 # set folder again
 folder = "output/sim_50_1"
 ## Monte Carlo Simulation
-n_simulations = 5                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 1                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 15                    # Number of confounders
@@ -67,7 +66,6 @@ n_observations = 2000               # Number of observations in simulated datase
 
 ## DML estimator
 cv_folds = 2                        # Number of folds for cross-validation of used ML methods in the ensemble method
-trimmer = 0.05                      # quantile which gets deducted from each side to avoid extreme values in the score estimation
 
 # declare which ml methods are going to be used by providing short versions of names
 # will be further used to create necessary variables
@@ -98,7 +96,13 @@ for (j in 1:n_simulations) {
   rm(data)
   
   # run the DML estimator, cross-fitting is done within the algorithm, ate and average weights of ensemble are extracted
-  dml_estimator  = dml_ens_trim(Y, D, X, true_p, true_te, ps_methods, oc_methods, ml_methods, ens_folds = 2, trim = trimmer)
+  dml_estimator  = dml_ens(Y, D, X, true_p, true_te, ps_methods, oc_methods, ml_methods, ens_folds = 2)
+  
+  # true values 
+  te_true = dml_estimator$te_true
+  attr(te_true, "dim") <- c(1, n_observations)
+  p_true = dml_estimator$p_true
+  attr(p_true, "dim") <- c(1, n_observations)
   
   # update list of estimates for current simulation round
   ate = do.call(cbind, dml_estimator$ate)                   # estimated effect theta in current simulation round
@@ -107,9 +111,13 @@ for (j in 1:n_simulations) {
   ate_xgb = dml_estimator$ate$xgb
   ate_nn = dml_estimator$ate$nn
   te_ens = dml_estimator$te$ens
+  attr(te_ens, "dim") <- c(1, n_observations)
   te_lasso = dml_estimator$te$lasso
+  attr(te_lasso, "dim") <- c(1, n_observations)
   te_xgb = dml_estimator$te$xgb
+  attr(te_xgb, "dim") <- c(1, n_observations)
   te_nn = dml_estimator$te$nn
+  attr(te_nn, "dim") <- c(1, n_observations)
   se_po_ens = dml_estimator$se_po[1,]
   se_po_lasso = dml_estimator$se_po[2,]
   se_po_xgb = dml_estimator$se_po[3,]
@@ -122,7 +130,9 @@ for (j in 1:n_simulations) {
   oc_ensemble = dml_estimator$w_ens_oc          # store weights of current simulation round
   
   y_ens = dml_estimator$y_ens
+  attr(y_ens, "dim") <- c(1, n_observations)
   p_ens = dml_estimator$p_ens
+  attr(p_ens, "dim") <- c(1, n_observations)
   
   #confidence intervals
   CI_up_ens = ate_ens + 1.96*(se_te_ens/sqrt(length(te_ens)))
@@ -133,11 +143,6 @@ for (j in 1:n_simulations) {
   CI_down_xgb = ate_xgb - 1.96*(se_te_xgb/sqrt(length(te_xgb)))
   CI_up_nn = ate_nn + 1.96*(se_te_nn/sqrt(length(te_nn)))
   CI_down_nn = ate_nn - 1.96*(se_te_nn/sqrt(length(te_nn)))
-  
-  # get trimmed true values for comparison
-  p_t_trim = dml_estimator$p_t_trim
-  y_t_trim = dml_estimator$y_t_trim
-  te_t_trim = dml_estimator$te_t_trim
   
   ## save results in csv-files
   # prepare consolidate output
@@ -152,7 +157,7 @@ for (j in 1:n_simulations) {
   
   # treatment effects
   for (i in 1:length(ml_methods)){
-    temp = as.data.table(t(c(get(paste0("te_", ml_methods[i])))))
+    temp = as.data.table(get(paste0("te_", ml_methods[i])))
     dbWriteTable(conn = db50_1, name = paste0("treatmenteffect_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = FALSE, append = TRUE)
     rm(temp)
@@ -171,26 +176,28 @@ for (j in 1:n_simulations) {
                overwrite = FALSE, append = TRUE)
   
   # estimated values and true values for treatment effects, propensity score and outcome
-  dbWriteTable(conn = db50_1, name = "y_ensemble", value = as.data.table(t(c(y_ens))), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db50_1, name = "y_ensemble", value = as.data.table(y_ens), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db50_1, name = "p_ensemble", value = as.data.table(t(c(p_ens))), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db50_1, name = "p_ensemble", value = as.data.table(p_ens), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db50_1, name = "p_true_trim", value = as.data.table(t(c(p_t_trim))), row.names = FALSE, header = FALSE,
+  attr(true_p, "dim") <- c(1, n_observations)
+  dbWriteTable(conn = db50_1, name = "p_true", value = as.data.table(p_true), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db50_1, name = "te_true_trim", value = as.data.table(t(c(te_t_trim))), row.names = FALSE, header = FALSE,
+  attr(true_te, "dim") <- c(1, n_observations)
+  dbWriteTable(conn = db50_1, name = "te_true", value = as.data.table(te_true), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
   
   # confidence intervals
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_up_", ml_methods[i])))))
     dbWriteTable(conn = db50_1, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
-                 overwrite = TRUE, append = FALSE)
+                 overwrite = FALSE, append = TRUE)
     rm(temp)
   }
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_down_", ml_methods[i])))))
     dbWriteTable(conn = db50_1, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
-                 overwrite = TRUE, append = FALSE)
+                 overwrite = FALSE, append = TRUE)
     rm(temp)
   }
   
@@ -198,7 +205,7 @@ for (j in 1:n_simulations) {
   rm(dml_estimator)
   rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
      te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
-     se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, p_t_trim, y_t_trim, te_t_trim,
+     se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, 
      output_ate, output_se_te, output_se_po, CI_up_ens, CI_down_ens, CI_up_lasso, CI_down_lasso,
      CI_up_xgb, CI_down_xgb, CI_up_nn, CI_down_nn)
   dbDisconnect(db50_1)

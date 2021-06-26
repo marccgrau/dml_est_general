@@ -78,7 +78,7 @@ tau1 = function(X){
     
     y = X[,1] + X[,2] + X[,4]*X[,7] + X[,9]^2 - 2 
     
-    y_scale = scale(y, center = TRUE, scale = TRUE)
+    y_scale = scale(y, center = TRUE, scale = TRUE) + 0.5
     return(y_scale)
   } else {
     print("Insufficient data for this DGP, increase p")
@@ -90,7 +90,7 @@ tau2 = function(X){
     
     y = X[,2] + X[,5]*X[,7] + X[,3]*X[,8]*X[,9] + X[,4]*X[,5]*X[,6]*X[,7] 
     
-    y_scale = scale(y, center = TRUE, scale = TRUE)
+    y_scale = scale(y, center = TRUE, scale = TRUE) + 0.5
     return(y_scale)
   } else {
     print("Insufficient data for this DGP, increase p")
@@ -102,7 +102,7 @@ tau3 = function(X){
     
     y = 0.5*(X[,1]^2 + X[,2] + X[,3]^2 + X[,4] + X[,5]^3 + X[,6] + X[,7]^3 + X[,8] + X[,9]^4 - 5) 
     
-    y_scale = scale(y, center = TRUE, scale = TRUE)
+    y_scale = scale(y, center = TRUE, scale = TRUE) + 0.5
     return(y_scale)
   } else {
     print("Insufficient data for this DGP, increase p")
