@@ -12,7 +12,7 @@ setwd(directory_path)
 
 set.seed(12345)
 
-source("../general_functions/general_utils.R")
+source(file.path(dirname(dirname(getwd())), "general_functions/general_utils.R"))
 
 x = as.matrix(fread(file.path(directory_path, "x_data.csv")))
 y = as.matrix(fread(file.path(directory_path, "y_data.csv")))
@@ -85,7 +85,7 @@ for (j in 1:nrow(grid_frame_single_layer)){
     model %>% 
       compile(
         loss = "mean_squared_error",
-        optimizer = optimizer_sgd(lr = 0.01),
+        optimizer = optimizer_adam(lr = 0.01),
         metrics = list("mean_squared_error")
       )
     

@@ -12,7 +12,7 @@ setwd(directory_path)
 
 set.seed(12345)
 
-source("../general_functions/general_utils.R")
+source(file.path(dirname(dirname(getwd())), "general_functions/general_utils.R"))
 
 x = as.matrix(fread(file.path(directory_path, "x_data.csv")))
 y = as.matrix(fread(file.path(directory_path, "y_data.csv")))
