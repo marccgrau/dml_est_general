@@ -1,10 +1,10 @@
 #!/bin/bash
 
 echo part_1_sim1_50.R
-chmod u+rwx part_1_sim1_50.R
+chmod a+rwx part_1_sim1_50.R
 
 echo part_ff_sim1_50.R
-chmod u+rwx part_ff_sim1_50.R
+chmod a+rwx part_ff_sim1_50.R
 
 Rscript ./part_1_sim1_50.R
 echo "Congratulations! Part 1 of simulation 1 executed successfully. Starting with part 2."
