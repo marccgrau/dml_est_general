@@ -1,0 +1,2 @@
+units1,units2,act.fct1,act.fct2,act.fctfinal,loss.fct,eval.metric,l1_1,twolayers,learning_rate,optimizer
+16,16,sigmoid,relu,,mse,mean_squared_error,0,TRUE,0.01,adamax

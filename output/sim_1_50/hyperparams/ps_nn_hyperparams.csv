@@ -1,0 +1,2 @@
+units1,act.fct1,act.fctfinal,loss.fct,eval.metric,l1_1,twolayers,learning_rate,optimizer
+8,relu,sigmoid,binary_crossentropy,binary_crossentropy,0.01,FALSE,0.01,adam
