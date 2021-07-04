@@ -45,3 +45,30 @@ source(file.path(directory_path, "doubleML/dml_ens.R"))
 source(file.path(directory_path, "ensemble_method/ensemble.R"))
 source(file.path(directory_path, "ensemble_method/ml_wrapper.R"))
 source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
+
+
+### Define necessary parameters
+folder = "output/sim_1_50" # set folder to store values
+## Monte Carlo Simulation
+n_simulations = 2                  # Number of simulation rounds for Monte Carlo Study
+
+## Data
+n_covariates = 15                    # Number of confounders
+n_observations = 2000               # Number of observations in simulated dataset
+
+## DML estimator
+cv_folds = 2                        # Number of folds for cross-validation of used ML methods in the ensemble method
+
+# declare which ml methods are going to be used by providing short versions of names
+# will be further used to create necessary variables
+ml_methods = c("ens", "lasso", "xgb", "nn")
+
+# Simulation 1; 50/50 -----------------------------------------------
+
+# create first simulation entry to later append all further simulations
+# necessary due to computational restrictions
+# store te values, btw assign each simulation the respective column name
+colnames_sim = to("sim_", until = n_simulations, from = 1)
+
+# start db for 50/50 Simulation
+db1_50 = dbConnect(SQLite(), dbname = file.path(folder, "db1_50"))
