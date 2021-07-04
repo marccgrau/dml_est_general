@@ -55,7 +55,7 @@ source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
 # Parameters --------------------------------------------------------------
 
 ### Define necessary parameters
-folder = "output/sim_1_50" # set folder to store values
+folder = "output/sim_2_50" # set folder to store values
 ## Monte Carlo Simulation
 n_simulations = 50                  # Number of simulation rounds for Monte Carlo Study
 
@@ -70,7 +70,7 @@ cv_folds = 2                        # Number of folds for cross-validation of us
 # will be further used to create necessary variables
 ml_methods = c("ens", "lasso", "xgb", "nn")
 
-# Simulation 1; 50/50 -----------------------------------------------
+# Simulation 2; 50/50 -----------------------------------------------
 
 # create first simulation entry to later append all further simulations
 # necessary due to computational restrictions
@@ -78,10 +78,10 @@ ml_methods = c("ens", "lasso", "xgb", "nn")
 colnames_sim = to("sim_", until = n_simulations, from = 1)
 
 # start db for 50/50 Simulation
-db1_50 = dbConnect(SQLite(), dbname = file.path(folder, "db1_50"))
+db2_50 = dbConnect(SQLite(), dbname = file.path(folder, "db2_50"))
 
 # Hyperparameter Tuning for DGP 1
-hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, smalltreat = FALSE)
+hyperparams = hyperparam_tuning_2(n_covariates, n_observations, mu2, tau2, pi2, sigma = 1, cv_folds, smalltreat = FALSE)
 ps_methods = hyperparams$ps_methods
 oc_methods = hyperparams$oc_methods
 
@@ -111,7 +111,7 @@ for (j in 1:1) {
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = FALSE)
+  data = generalDGP(n_covariates, n_observations, mu2, tau2, pi2, sigma = 1, smalltreat = FALSE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -185,56 +185,56 @@ for (j in 1:1) {
   
   ## write to database
   # average treatment effects
-  dbWriteTable(conn = db1_50, name = "average_te", value = as.data.table(output_ate), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "average_te", value = as.data.table(output_ate), row.names = FALSE, header = TRUE,
                overwrite = TRUE, append = FALSE)
   
   # treatment effects
   for (i in 1:length(ml_methods)){
     temp = as.data.table(get(paste0("te_", ml_methods[i])))
-    dbWriteTable(conn = db1_50, name = paste0("treatmenteffect_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("treatmenteffect_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = TRUE, append = FALSE)
     rm(temp)
   }
   
   # standard errors of score
-  dbWriteTable(conn = db1_50, name = "standerror_te", value = as.data.table(output_se_te), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "standerror_te", value = as.data.table(output_se_te), row.names = FALSE, header = TRUE,
                overwrite = TRUE, append = FALSE)
-  dbWriteTable(conn = db1_50, name = "standerror_po", value = as.data.table(output_se_po), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "standerror_po", value = as.data.table(output_se_po), row.names = FALSE, header = TRUE,
                overwrite = TRUE, append = FALSE)
   
   # Each ensembles weights
-  dbWriteTable(conn = db1_50, name = "propensity_ensemble", value = as.data.table(t(ps_ensemble)), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "propensity_ensemble", value = as.data.table(t(ps_ensemble)), row.names = FALSE, header = TRUE,
                overwrite = TRUE, append = FALSE)
-  dbWriteTable(conn = db1_50, name = "outcome_ensemble", value = as.data.table(t(oc_ensemble)), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "outcome_ensemble", value = as.data.table(t(oc_ensemble)), row.names = FALSE, header = TRUE,
                overwrite = TRUE, append = FALSE)
   
   # estimated values and true values for treatment effects, propensity score and outcome
-  dbWriteTable(conn = db1_50, name = "y_ensemble", value = as.data.table(y_ens), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "y_ensemble", value = as.data.table(y_ens), row.names = FALSE, header = FALSE,
                overwrite = TRUE, append = FALSE)
-  dbWriteTable(conn = db1_50, name = "p_ensemble", value = as.data.table(p_ens), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "p_ensemble", value = as.data.table(p_ens), row.names = FALSE, header = FALSE,
                overwrite = TRUE, append = FALSE)
   attr(true_p, "dim") <- c(1, n_observations)
-  dbWriteTable(conn = db1_50, name = "p_true", value = as.data.table(p_true), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "p_true", value = as.data.table(p_true), row.names = FALSE, header = FALSE,
                overwrite = TRUE, append = FALSE)
   attr(true_te, "dim") <- c(1, n_observations)
-  dbWriteTable(conn = db1_50, name = "te_true", value = as.data.table(te_true), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "te_true", value = as.data.table(te_true), row.names = FALSE, header = FALSE,
                overwrite = TRUE, append = FALSE)
   
   # confidence intervals
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_up_", ml_methods[i])))))
-    dbWriteTable(conn = db1_50, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = TRUE, append = FALSE)
     rm(temp)
   }
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_down_", ml_methods[i])))))
-    dbWriteTable(conn = db1_50, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = TRUE, append = FALSE)
     rm(temp)
   }
   
-  print(paste("Simulation 1, 50/50, round: ", j))
+  print(paste("Simulation 2, 50/50, round: ", j))
   rm(dml_estimator)
   rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
      te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
@@ -245,18 +245,18 @@ for (j in 1:1) {
   
 }
 
-dbDisconnect(db1_50)
-rm(db1_50)
+dbDisconnect(db2_50)
+rm(db2_50)
 gc()
 tic()
 for (j in 2:n_simulations) {
   
-  db1_50 = dbConnect(SQLite(), dbname = file.path(folder, "db1_50"))
+  db2_50 = dbConnect(SQLite(), dbname = file.path(folder, "db2_50"))
   ###########
   ## 50/50 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = FALSE)
+  data = generalDGP(n_covariates, n_observations, mu2, tau2, pi2, sigma = 1, smalltreat = FALSE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -325,64 +325,64 @@ for (j in 2:n_simulations) {
   
   ## write to database
   # average treatment effects
-  dbWriteTable(conn = db1_50, name = "average_te", value = as.data.table(output_ate), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "average_te", value = as.data.table(output_ate), row.names = FALSE, header = TRUE,
                overwrite = FALSE, append = TRUE)
   
   # treatment effects
   for (i in 1:length(ml_methods)){
     temp = as.data.table(get(paste0("te_", ml_methods[i])))
-    dbWriteTable(conn = db1_50, name = paste0("treatmenteffect_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("treatmenteffect_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = FALSE, append = TRUE)
     rm(temp)
   }
   
   # standard errors of score
-  dbWriteTable(conn = db1_50, name = "standerror_te", value = as.data.table(output_se_te), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "standerror_te", value = as.data.table(output_se_te), row.names = FALSE, header = TRUE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db1_50, name = "standerror_po", value = as.data.table(output_se_po), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "standerror_po", value = as.data.table(output_se_po), row.names = FALSE, header = TRUE,
                overwrite = FALSE, append = TRUE)
   
   # Each ensembles weights
-  dbWriteTable(conn = db1_50, name = "propensity_ensemble", value = as.data.table(t(ps_ensemble)), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "propensity_ensemble", value = as.data.table(t(ps_ensemble)), row.names = FALSE, header = TRUE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db1_50, name = "outcome_ensemble", value = as.data.table(t(oc_ensemble)), row.names = FALSE, header = TRUE,
+  dbWriteTable(conn = db2_50, name = "outcome_ensemble", value = as.data.table(t(oc_ensemble)), row.names = FALSE, header = TRUE,
                overwrite = FALSE, append = TRUE)
   
   # estimated values and true values for treatment effects, propensity score and outcome
-  dbWriteTable(conn = db1_50, name = "y_ensemble", value = as.data.table(y_ens), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "y_ensemble", value = as.data.table(y_ens), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
-  dbWriteTable(conn = db1_50, name = "p_ensemble", value = as.data.table(p_ens), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "p_ensemble", value = as.data.table(p_ens), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
   attr(true_p, "dim") <- c(1, n_observations)
-  dbWriteTable(conn = db1_50, name = "p_true", value = as.data.table(p_true), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "p_true", value = as.data.table(p_true), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
   attr(true_te, "dim") <- c(1, n_observations)
-  dbWriteTable(conn = db1_50, name = "te_true", value = as.data.table(te_true), row.names = FALSE, header = FALSE,
+  dbWriteTable(conn = db2_50, name = "te_true", value = as.data.table(te_true), row.names = FALSE, header = FALSE,
                overwrite = FALSE, append = TRUE)
   
   # confidence intervals
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_up_", ml_methods[i])))))
-    dbWriteTable(conn = db1_50, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("CI_up_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = FALSE, append = TRUE)
     rm(temp)
   }
   for (i in 1:length(ml_methods)){
     temp = as.data.table(t(c(get(paste0("CI_down_", ml_methods[i])))))
-    dbWriteTable(conn = db1_50, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
+    dbWriteTable(conn = db2_50, name = paste0("CI_down_", ml_methods[i]), value = temp, row.names = FALSE, header = FALSE,
                  overwrite = FALSE, append = TRUE)
     rm(temp)
   }
   
-  print(paste("Simulation 1, 50/50, round: ", j))
+  print(paste("Simulation 2, 50/50, round: ", j))
   rm(dml_estimator)
   rm(Y, D, X, true_te, true_p, ate_t, se_te_t, n_obs, ate, ate_ens, ate_lasso, ate_xgb, ate_nn,
      te_ens, te_lasso, te_xgb, te_nn, se_po_ens, se_po_lasso, se_po_xgb, se_po_nn, se_te_ens, 
      se_te_lasso, se_te_xgb, se_te_nn, ps_ensemble, oc_ensemble, 
      output_ate, output_se_te, output_se_po, CI_up_ens, CI_down_ens, CI_up_lasso, CI_down_lasso,
      CI_up_xgb, CI_down_xgb, CI_up_nn, CI_down_nn)
-  dbDisconnect(db1_50)
-  rm(db1_50)
+  dbDisconnect(db2_50)
+  rm(db2_50)
   gc()
 }
 toc()

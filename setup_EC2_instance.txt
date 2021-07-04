@@ -1,12 +1,21 @@
-source activate tensorflow2_p36
+source activate tensorflow2_latest_p37
 
-sudo yum install -y R
+sudo amazon-linux-extras install R4
+
 
 wget https://download2.rstudio.org/server/centos7/x86_64/rstudio-server-rhel-1.4.1717-x86_64.rpm
 sudo yum install rstudio-server-rhel-1.4.1717-x86_64.rpm
 rm rstudio-server-rhel-1.4.1717-x86_64.rpm
 
 # type into browser for connection on port 8787
-http://ec2-54-244-60-46.us-west-2.compute.amazonaws.com:8787/
+serveraddress:8787
 
+# set up tensorflow and keras properly
+install_tensorflow(version = "gpu")
+install_keras()
 
+# watch GPU usage
+watch -d -n 0.5 nvidia-smi
+
+# watch current CPU processes
+top -i # - idle processes
