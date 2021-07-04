@@ -11,12 +11,12 @@ Write-Host "Congratulations! Part 1 of simulation 1 executed successfully. Start
 
 for i in {2..11..1}
 	do
-    	Rscript.exe part_ff_sim1_50.R
+    	Rscript part_ff_sim1_50.R
 	
 	if [[ $i -lt 10 ]]
 	then
-	Write-Host "Congratulations! Part $($i) of simulation 1 executed successfully. Starting with part $($i+1)."
+	echo "Congratulations! Part $($i) of simulation 1 executed successfully. Starting with part $($i+1)."
 	else 
-	Write-Host "Congratulations! Part $($i) of simulation 1 executed successfully. The simulation ended successfully."
+	echo "Congratulations! Part $($i) of simulation 1 executed successfully. The simulation ended successfully."
 	fi
 done
