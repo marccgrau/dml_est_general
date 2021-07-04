@@ -1,3 +1,9 @@
+## Default repo
+local({r <- getOption("repos")
+r["CRAN"] <- "http://cloud.r-project.org" 
+options(repos=r)
+})
+
 toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
             "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
             "keras", "tfdatasets", "data.table", "lessR", "ggthemes", "tictoc",
