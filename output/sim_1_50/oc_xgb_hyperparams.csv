@@ -1,2 +1,0 @@
-booster,objective,max_depth,eta,subsample,colsample_bytree,min_child_weight,alpha,nrounds,eval_metric
-gbtree,reg:squarederror,3,0.0217280539823696,0.835133512248285,0.683461107872427,6,4,300,rmse
