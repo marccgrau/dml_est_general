@@ -19,3 +19,16 @@ watch -d -n 0.5 nvidia-smi
 
 # watch current CPU processes
 top -i # - idle processes
+
+# create user group
+sudo groupadd -g 123 rstats
+
+# add user to group
+sudo usermod -a -G rstats ec2-user
+
+# give user group writing permission to directory
+sudo chown -R ec2-user:rstats /home/ec2-user/dml_est_general
+
+# make scripts executable
+chmod 777 script
+Rscript ...
