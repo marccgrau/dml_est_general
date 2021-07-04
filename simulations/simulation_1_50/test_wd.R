@@ -26,3 +26,22 @@ thisPath <- function() {
 directory_path <- dirname(dirname(thisPath()))
 setwd(directory_path)
 print(directory_path)
+
+source(file.path(directory_path, "general_functions/general_utils.R"))
+
+# DGPs
+source(file.path(directory_path, "DGP/GeneralDGP.R"))
+source(file.path(directory_path, "DGP/nuisance_functions.R"))
+source(file.path(directory_path, "DGP/DGPfunctions.R"))
+
+# Hyperparameter Tuning
+source(file.path(directory_path, "hyperparam_tuning/hyperparam_tuning.R"))
+
+
+# DML estimator
+source(file.path(directory_path, "doubleML/dml_ens.R"))
+
+# Ensemble learner
+source(file.path(directory_path, "ensemble_method/ensemble.R"))
+source(file.path(directory_path, "ensemble_method/ml_wrapper.R"))
+source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
