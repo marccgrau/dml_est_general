@@ -1,0 +1,2 @@
+booster,objective,max_depth,eta,subsample,colsample_bytree,min_child_weight,alpha,nrounds,eval_metric
+gbtree,binary:logistic,3,0.285974051121157,0.704429530794732,0.688561738096178,3,4,300,error
