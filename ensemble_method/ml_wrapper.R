@@ -348,7 +348,7 @@ nn_keras_fit = function(x,y,args=list()) {
     y = data$label,
     epochs = 500,
     validation_split = 0.2,
-    batch_size = 4,
+    batch_size = 200,
     verbose = 0,
     callbacks = list(early_stop)
   )
