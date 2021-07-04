@@ -4,6 +4,15 @@ r["CRAN"] <- "http://cloud.r-project.org"
 options(repos=r)
 })
 
+toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
+            "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
+            "keras", "tfdatasets", "data.table", "lessR", "ggthemes", "tictoc",
+            "RSQLite", "RColorBrewer")
+toinstall <- toload[which(toload %in% installed.packages()[,1] == F)]
+lapply(toinstall, install.packages, character.only = TRUE)
+lapply(toload, require, character.only = TRUE)
+rm(list = ls())
+
 thisPath <- function() {
   cmdArgs <- commandArgs(trailingOnly = FALSE)
   if (length(grep("^-f$", cmdArgs)) > 0) {
