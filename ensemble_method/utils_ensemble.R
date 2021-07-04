@@ -166,38 +166,90 @@ interact.all <- function(input){
 #' creates model structure as defined with given parameters
 #'
 
-build_model <- function(data, spec, 
+build_model <- function(data, 
+                        spec, 
+                        twolayers = FALSE,
                         units1 = 64, 
+                        units2 = 32, 
                         act.fct1 = "relu", 
+                        act.fct2 = "relu",
                         act.fctfinal = NA, 
                         loss.fct = "mse", 
                         eval.metric = "mean_squared_error", 
                         l1_1, 
-                        learning_rate = 0.1
-                        ) {
+                        learning_rate = 0.01,
+                        optimizer = "adagrad") {
   
   input <- layer_input_from_dataset(data %>% dplyr::select(-label))
-  if(is.na(act.fctfinal)){
-    output <- input %>% 
-      layer_dense_features(dense_features(spec)) %>% 
-      layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
-      layer_dense(units = 1)
+  if (twolayers == FALSE) {
+    if(is.na(act.fctfinal)){
+      output <- input %>% 
+        layer_dense_features(dense_features(spec)) %>% 
+        layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+        layer_dense(units = 1)
+    } else {
+      output <- input %>% 
+        layer_dense_features(dense_features(spec)) %>% 
+        layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+        layer_dense(units = 1, activation = act.fctfinal) 
+    }
   } else {
-    output <- input %>% 
-      layer_dense_features(dense_features(spec)) %>% 
-      layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
-      layer_dense(units = 1, activation = act.fctfinal) 
+    if(is.na(act.fctfinal)){
+      output <- input %>% 
+        layer_dense_features(dense_features(spec)) %>% 
+        layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+        layer_dense(units = units2, activation = act.fct2)%>%
+        layer_dense(units = 1)
+    } else {
+      output <- input %>% 
+        layer_dense_features(dense_features(spec)) %>% 
+        layer_dense(units = units1, activation = act.fct1, kernel_regularizer = regularizer_l1(l1_1))%>%
+        layer_dense(units = units2, activation = act.fct2)%>%
+        layer_dense(units = 1, activation = act.fctfinal) 
+    }
   }
-
   
   model <- keras_model(input, output)
   
-  model %>% 
-    compile(
-      loss = loss.fct,
-      optimizer = optimizer_adagrad(lr = learning_rate),
-      metrics = list(eval.metric)
-    )
+  if(optimizer == "adam") {
+    model %>% 
+      compile(
+        loss = loss.fct,
+        optimizer = optimizer_adam(lr = learning_rate),
+        metrics = list(eval.metric)
+      )
+  } else if (optimizer == "adamax") {
+    model %>% 
+      compile(
+        loss = loss.fct,
+        optimizer = optimizer_adamax(lr = learning_rate),
+        metrics = list(eval.metric)
+      )
+  } else if (optimizer == "adagrad") {
+    model %>% 
+      compile(
+        loss = loss.fct,
+        optimizer = optimizer_adagrad(lr = learning_rate),
+        metrics = list(eval.metric)
+      )
+  } else if (optimizer == "rmsprop") {
+    model %>% 
+      compile(
+        loss = loss.fct,
+        optimizer = optimizer_rmsprop(lr = learning_rate),
+        metrics = list(eval.metric)
+      )
+  } else if (optimizer == "sgd") {
+    model %>% 
+      compile(
+        loss = loss.fct,
+        optimizer = optimizer_sgd(lr = learning_rate),
+        metrics = list(eval.metric)
+      )
+  } else {
+    print("unknown optimizer!")
+  }
+  
   
   model
 }

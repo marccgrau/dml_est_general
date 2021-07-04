@@ -1,4 +1,4 @@
-hyperparam_nnet_keras = function(y, x, grid_nn) {
+hyperparam_nnet_keras = function(y, x, grid_nn, optimizer = "adagrad", learning_rate, twolayers = FALSE) {
   
   column_names = rep(NA, ncol(x))
   for(i in 1:ncol(x)){
@@ -36,13 +36,17 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
   lowest_errors = rep(NA, nrow(grid_nn))
   
   for (i in 1:nrow(grid_nn)){
-    model = build_model(df_tr, spec, 
+    model = build_model(df_tr, 
+                        spec, 
+                        twolayers = twolayers,
                         units1 = grid_nn$units1[i], 
                         act.fct1 = grid_nn$act.fct1[i], 
                         act.fctfinal = grid_nn$act.fctfinal[i], 
                         loss.fct = grid_nn$loss.fct[i], 
                         eval.metric = grid_nn$eval.metric[i],
-                        l1_1 = grid_nn$l1_1[i]
+                        l1_1 = grid_nn$l1_1[i],
+                        optimizer = optimizer, 
+                        learning_rate = learning_rate
     )
     
     model %>% fit(
@@ -56,7 +60,7 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
     )
     
     preds = model %>% predict(df_te %>% dplyr::select(-label))
-    if (is.null(grid_nn$act.fctfinal[i])){
+    if (is.na(grid_nn$act.fctfinal[i])){
       lowest_errors[i] = rmse_calc(y_te, preds)
     } else {
       lowest_errors[i] = LogLoss(preds, y_te)
@@ -70,13 +74,32 @@ hyperparam_nnet_keras = function(y, x, grid_nn) {
   bestparams = gridsearch[which.min(lowest_errors), ]
   
   # output the best hyperparameter set
-  finalparams = list(units1 = bestparams$units1,
-                     act.fct1 = bestparams$act.fct1, 
-                     act.fctfinal = bestparams$act.fctfinal,  
-                     loss.fct = bestparams$loss.fct, 
-                     eval.metric = bestparams$eval.metric,
-                     l1_1 = bestparams$l1_1
-                     )
+  if (twolayers == FALSE) {
+    finalparams = list(units1 = bestparams$units1,
+                       act.fct1 = bestparams$act.fct1, 
+                       act.fctfinal = bestparams$act.fctfinal,  
+                       loss.fct = bestparams$loss.fct, 
+                       eval.metric = bestparams$eval.metric,
+                       l1_1 = bestparams$l1_1, 
+                       twolayers = FALSE, 
+                       learning_rate = learning_rate,
+                       optimizer = optimizer
+    )
+  } else {
+    finalparams = list(units1 = bestparams$units1,
+                       units2 = bestparams$units2,
+                       act.fct1 = bestparams$act.fct1, 
+                       act.fct2 = bestparams$act.fct2,
+                       act.fctfinal = bestparams$act.fctfinal,  
+                       loss.fct = bestparams$loss.fct, 
+                       eval.metric = bestparams$eval.metric,
+                       l1_1 = bestparams$l1_1,
+                       twolayers = TRUE,
+                       learning_rate = learning_rate,
+                       optimizer = optimizer
+    )
+  }
+  
   
   return(finalparams)
 }

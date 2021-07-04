@@ -6,7 +6,8 @@ source("hyperparam_tuning/hyperparam_nnet_keras.R")
 source("hyperparam_tuning/gridframes_nn_keras.R")
 
 
-hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, smalltreat = FALSE){
+hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, 
+                               sigma = 1, cv_folds = 2, smalltreat = FALSE){
   ## Data simulation for cross-validation of ml methods to select hyperparameters
   # Using the general DGP of Powers et al. (2018)
   data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, smalltreat)
@@ -37,11 +38,11 @@ hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, ps
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
   grid_nn_oc = grid_keras_oc_1()
-  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc)
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = TRUE, optimizer = "adamax", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
   grid_nn_ps = grid_keras_ps_1()
-  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps)
+  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adam", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
@@ -63,10 +64,11 @@ hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, ps
   return(output)
 }
 
-hyperparam_tuning_2 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, w = 0){
+hyperparam_tuning_2 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, 
+                               sigma = 1, cv_folds = 2, smalltreat = FALSE){
   ## Data simulation for cross-validation of ml methods to select hyperparameters
   # Using the general DGP of Powers et al. (2018)
-  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, w)
+  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, smalltreat)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -94,22 +96,22 @@ hyperparam_tuning_2 = function(n_covariates, n_observations, mufunc, taufunc, ps
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
   grid_nn_oc = gridframe_oc_2()
-  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc)
+  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
   grid_nn_ps = gridframe_ps_2()
-  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps)
+  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
-  lasso_ps = create_method("lasso_inter", name = "Lasso_ps_1", args = params_lasso_ps)
-  xgb_ps = create_method("xgboost", name = "XGBoost_ps_1", args = params_xgb_ps)
-  nnet_ps = create_method("neural_net", name = "NeuralNet_ps_1", args = params_nn_ps)
+  lasso_ps = create_method("lasso_inter", name = "Lasso_ps_2", args = params_lasso_ps)
+  xgb_ps = create_method("xgboost", name = "XGBoost_ps_2", args = params_xgb_ps)
+  nnet_ps = create_method("neural_net", name = "NeuralNet_ps_2", args = params_nn_ps)
   
   # ML methods used for potential outcome estimation
-  lasso_oc = create_method("lasso_inter", name = "Lasso_oc_1", args = params_lasso_oc)
-  xgb_oc = create_method("xgboost", name = "XGBoost_oc_1", args = params_xgb_oc)
-  nnet_oc = create_method("neural_net", name = "NeuralNet_oc_1", args = params_nn_oc)
+  lasso_oc = create_method("lasso_inter", name = "Lasso_oc_2", args = params_lasso_oc)
+  xgb_oc = create_method("xgboost", name = "XGBoost_oc_2", args = params_xgb_oc)
+  nnet_oc = create_method("neural_net", name = "NeuralNet_oc_2", args = params_nn_oc)
   
   # list the respective methods for each ensemble
   ps_methods = list(lasso_ps, xgb_ps, nnet_ps)
@@ -120,10 +122,11 @@ hyperparam_tuning_2 = function(n_covariates, n_observations, mufunc, taufunc, ps
   return(output)
 }
 
-hyperparam_tuning_3 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma = 1, cv_folds = 2, w = 0){
+hyperparam_tuning_3 = function(n_covariates, n_observations, mufunc, taufunc, psfunc, 
+                               sigma = 1, cv_folds = 2, smalltreat = FALSE){
   ## Data simulation for cross-validation of ml methods to select hyperparameters
   # Using the general DGP of Powers et al. (2018)
-  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, w)
+  data = generalDGP(n_covariates, n_observations, mufunc, taufunc, psfunc, sigma, smalltreat)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
@@ -151,22 +154,22 @@ hyperparam_tuning_3 = function(n_covariates, n_observations, mufunc, taufunc, ps
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
   grid_nn_oc = gridframe_oc_3()
-  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc)
+  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
   grid_nn_ps = gridframe_ps_3()
-  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps)
+  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
-  lasso_ps = create_method("lasso_inter", name = "Lasso_ps_1", args = params_lasso_ps)
-  xgb_ps = create_method("xgboost", name = "XGBoost_ps_1", args = params_xgb_ps)
-  nnet_ps = create_method("neural_net", name = "NeuralNet_ps_1", args = params_nn_ps)
+  lasso_ps = create_method("lasso_inter", name = "Lasso_ps_3", args = params_lasso_ps)
+  xgb_ps = create_method("xgboost", name = "XGBoost_ps_3", args = params_xgb_ps)
+  nnet_ps = create_method("neural_net", name = "NeuralNet_ps_3", args = params_nn_ps)
   
   # ML methods used for potential outcome estimation
-  lasso_oc = create_method("lasso_inter", name = "Lasso_oc_1", args = params_lasso_oc)
-  xgb_oc = create_method("xgboost", name = "XGBoost_oc_1", args = params_xgb_oc)
-  nnet_oc = create_method("neural_net", name = "NeuralNet_oc_1", args = params_nn_oc)
+  lasso_oc = create_method("lasso_inter", name = "Lasso_oc_3", args = params_lasso_oc)
+  xgb_oc = create_method("xgboost", name = "XGBoost_oc_3", args = params_xgb_oc)
+  nnet_oc = create_method("neural_net", name = "NeuralNet_oc_3", args = params_nn_oc)
   
   # list the respective methods for each ensemble
   ps_methods = list(lasso_ps, xgb_ps, nnet_ps)
