@@ -64,7 +64,7 @@ source(file.path(directory_path, "ensemble_method/utils_ensemble.R"))
 # set folder again
 folder = "output/sim_1_50"
 ## Monte Carlo Simulation
-n_simulations = 2                  # Number of simulation rounds for Monte Carlo Study
+n_simulations = 50                  # Number of simulation rounds for Monte Carlo Study
 
 ## Data
 n_covariates = 15                    # Number of confounders
