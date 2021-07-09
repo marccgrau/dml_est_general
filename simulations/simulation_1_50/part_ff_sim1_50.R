@@ -4,9 +4,6 @@ r["CRAN"] <- "http://cloud.r-project.org"
 options(repos=r)
 })
 
-oldw <- getOption("warn")
-options(warn = -1)
-
 toload <- c("grf", "tidyverse", "hdm", "glmnet", "nnls", "Matrix", 
             "matrixStats", "xgboost", "neuralnet", "MASS", "MLmetrics", 
             "keras", "tfdatasets", "data.table", "lessR", "ggthemes", "tictoc",
@@ -222,4 +219,3 @@ for (j in 1:n_simulations) {
   gc()
 }
 
-options(warn = oldw)
