@@ -32,3 +32,10 @@ sudo chown -R ec2-user:rstats /home/ec2-user/dml_est_general
 # make scripts executable
 chmod 777 script
 Rscript ...
+
+# install FTP
+sudo su             //to access as root.
+yum update -y       //to update your server to latest stable release
+yum install vsftpd  // to install the ftp plug-ins.
+
+# add FTP port ranges to EC2 security group as TCP connections

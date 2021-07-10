@@ -25,39 +25,39 @@ source("general_functions/general_utils.R")
 
 # Results simulation 1: -----------------------------------------------------------
 # read in the results
-folder = "output/sim_50_1"
+folder = "output/sim_1_50"
 # start db for 50/50 Simulation
-db50_1 = dbConnect(SQLite(), dbname = file.path(folder, "db50_1"))
+db1_50 = dbConnect(SQLite(), dbname = file.path(folder, "db1_50"))
 
 #exemplary dataset
 x_example = fread(file = file.path(folder, "exemplary", "X_data.csv"))
 
 # Treatment effects and prop score
-ate_1 = dbGetQuery(db50_1, "SELECT * FROM average_te")
-te_ens_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_ens"))
-te_lasso_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_lasso"))
-te_xgb_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_xgb"))
-te_nn_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM treatmenteffect_nn"))
-true_te_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM te_true"))
-true_p_1 = as.matrix(dbGetQuery(db50_1, "SELECT * FROM p_true"))
+ate_1 = dbGetQuery(db1_50, "SELECT * FROM average_te")
+te_ens_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM treatmenteffect_ens"))
+te_lasso_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM treatmenteffect_lasso"))
+te_xgb_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM treatmenteffect_xgb"))
+te_nn_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM treatmenteffect_nn"))
+true_te_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM te_true"))
+true_p_1 = as.matrix(dbGetQuery(db1_50, "SELECT * FROM p_true"))
 # standard errors
-se_te_1 = dbGetQuery(db50_1, "SELECT * FROM standerror_te")
-se_po_1 = dbGetQuery(db50_1, "SELECT * FROM standerror_po")
+se_te_1 = dbGetQuery(db1_50, "SELECT * FROM standerror_te")
+se_po_1 = dbGetQuery(db1_50, "SELECT * FROM standerror_po")
 #ensemble weights
-ps_ensemble_1 = dbGetQuery(db50_1, "SELECT * FROM propensity_ensemble")
-oc_ensemble_1 = dbGetQuery(db50_1, "SELECT * FROM outcome_ensemble")
+ps_ensemble_1 = dbGetQuery(db1_50, "SELECT * FROM propensity_ensemble")
+oc_ensemble_1 = dbGetQuery(db1_50, "SELECT * FROM outcome_ensemble")
 # Confidence Intervals
-CI_up_ens_1 = dbGetQuery(db50_1, "SELECT * FROM CI_up_ens")
-CI_down_ens_1 = dbGetQuery(db50_1, "SELECT * FROM CI_down_ens")
-CI_up_lasso_1 = dbGetQuery(db50_1, "SELECT * FROM CI_up_lasso")
-CI_down_lasso_1 = dbGetQuery(db50_1, "SELECT * FROM CI_down_lasso")
-CI_up_xgb_1 = dbGetQuery(db50_1, "SELECT * FROM CI_up_xgb")
-CI_down_xgb_1 = dbGetQuery(db50_1, "SELECT * FROM CI_down_xgb")
-CI_up_nn_1 = dbGetQuery(db50_1, "SELECT * FROM CI_up_nn")
-CI_down_nn_1 = dbGetQuery(db50_1, "SELECT * FROM CI_down_nn")
+CI_up_ens_1 = dbGetQuery(db1_50, "SELECT * FROM CI_up_ens")
+CI_down_ens_1 = dbGetQuery(db1_50, "SELECT * FROM CI_down_ens")
+CI_up_lasso_1 = dbGetQuery(db1_50, "SELECT * FROM CI_up_lasso")
+CI_down_lasso_1 = dbGetQuery(db1_50, "SELECT * FROM CI_down_lasso")
+CI_up_xgb_1 = dbGetQuery(db1_50, "SELECT * FROM CI_up_xgb")
+CI_down_xgb_1 = dbGetQuery(db1_50, "SELECT * FROM CI_down_xgb")
+CI_up_nn_1 = dbGetQuery(db1_50, "SELECT * FROM CI_up_nn")
+CI_down_nn_1 = dbGetQuery(db1_50, "SELECT * FROM CI_down_nn")
 
 ## Ensemble bar chart
-figure_path = "output/sim_50_1/figures"
+figure_path = "output/sim_1_50/figures"
 # propensity score
 ps_plot_1 = ensemble_plot(ps_ensemble_1)
 oc_plot_1 = ensemble_plot(oc_ensemble_1)
