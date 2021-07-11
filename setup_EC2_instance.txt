@@ -38,4 +38,13 @@ sudo su             //to access as root.
 yum update -y       //to update your server to latest stable release
 yum install vsftpd  // to install the ftp plug-ins.
 
-# add FTP port ranges to EC2 security group as TCP connections
+# add FTP port ranges to EC2 security group
+sudo vi /etc/vsftpd/vsftpd.conf // update the vsftpd.conf file
+anonymous_enable=YES to anonymous_enable=NO
+# add the following to the .conf file
+pasv_enable=YES
+pasv_min_port=1024
+pasv_max_port=1048
+pasv_address=<Public IP of your instance>
+# restart FTP
+sudo systemctl restart vsftpd
