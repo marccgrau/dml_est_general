@@ -48,3 +48,8 @@ pasv_max_port=1048
 pasv_address=<Public IP of your instance>
 # restart FTP
 sudo systemctl restart vsftpd
+
+# use tmux to let script run despite shutting down CLI
+tmux new -s mywindow # open new window
+
+tmux a -t mywindow # reverse to the previously opened window

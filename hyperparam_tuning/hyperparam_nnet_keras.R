@@ -54,7 +54,7 @@ hyperparam_nnet_keras = function(y, x, grid_nn, optimizer = "adagrad", learning_
       y = df_tr$label,
       epochs = 500,
       validation_split = 0.2,
-      batch_size = 4,
+      batch_size = 200,
       verbose = 0,
       callbacks = list(early_stop)
     )

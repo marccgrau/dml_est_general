@@ -27,11 +27,11 @@ hyperparam_tuning_1 = function(n_covariates, n_observations, mufunc, taufunc, ps
   ## XGBoost hyperparameters
   ### Potential outcome: Random Search Algorithm
   # get random search grid for DGP 1
-  grid_xgb_oc = randomsearch_xgb_oc_1()
+  grid_xgb_oc = randomsearch_xgb_oc()
   params_xgb_oc = hyperparam_xgboost(Y, X, cv_folds, grid_xgb_oc, ps = FALSE)
   
   ### Propensity Score: Random Search Algorithm
-  grid_xgb_ps = randomsearch_xgb_ps_1()
+  grid_xgb_ps = randomsearch_xgb_ps()
   params_xgb_ps = hyperparam_xgboost(D, X, cv_folds, grid_xgb_ps, ps = TRUE)
   
   
@@ -84,23 +84,23 @@ hyperparam_tuning_2 = function(n_covariates, n_observations, mufunc, taufunc, ps
   
   ## XGBoost hyperparameters
   ### Potential outcome: Random Search Algorithm
-  # get random search grid for DGP 1
-  grid_xgb_oc = randomsearch_xgb_oc_2()
+  # get random search grid for DGP 2
+  grid_xgb_oc = randomsearch_xgb_oc()
   params_xgb_oc = hyperparam_xgboost(Y, X, cv_folds, grid_xgb_oc, ps = FALSE)
   
   ### Propensity Score: Random Search Algorithm
-  grid_xgb_ps = randomsearch_xgb_ps_2()
+  grid_xgb_ps = randomsearch_xgb_ps()
   params_xgb_ps = hyperparam_xgboost(D, X, cv_folds, grid_xgb_ps, ps = TRUE)
   
   
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
-  grid_nn_oc = gridframe_oc_2()
-  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
+  grid_nn_oc = grid_keras_oc_2()
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "sgd", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
-  grid_nn_ps = gridframe_ps_2()
-  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
+  grid_nn_ps = grid_keras_ps_2()
+  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adam", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
@@ -142,23 +142,23 @@ hyperparam_tuning_3 = function(n_covariates, n_observations, mufunc, taufunc, ps
   
   ## XGBoost hyperparameters
   ### Potential outcome: Random Search Algorithm
-  # get random search grid for DGP 1
-  grid_xgb_oc = randomsearch_xgb_oc_3()
+  # get random search grid for DGP 3
+  grid_xgb_oc = randomsearch_xgb_oc()
   params_xgb_oc = hyperparam_xgboost(Y, X, cv_folds, grid_xgb_oc, ps = FALSE)
   
   ### Propensity Score: Random Search Algorithm
-  grid_xgb_ps = randomsearch_xgb_ps_3()
+  grid_xgb_ps = randomsearch_xgb_ps()
   params_xgb_ps = hyperparam_xgboost(D, X, cv_folds, grid_xgb_ps, ps = TRUE)
   
   
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
-  grid_nn_oc = gridframe_oc_3()
-  params_nn_oc = hyperparam_nnet(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
+  grid_nn_oc = grid_keras_oc_3()
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
-  grid_nn_ps = gridframe_ps_3()
-  params_nn_ps = hyperparam_nnet(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
+  grid_nn_ps = grid_keras_ps_3()
+  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adagrad", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation
