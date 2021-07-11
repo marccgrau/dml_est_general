@@ -1,7 +1,7 @@
 randomsearch_xgb_oc_1 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "reg:squarederror",
                   max_depth = sample(3:10, 1),
@@ -26,7 +26,7 @@ randomsearch_xgb_oc_1 = function(){
 randomsearch_xgb_ps_1 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "binary:logistic",
                   max_depth = sample(3:10, 1),
@@ -51,7 +51,7 @@ randomsearch_xgb_ps_1 = function(){
 randomsearch_xgb_oc_2 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "reg:squarederror",
                   max_depth = sample(3:10, 1),
@@ -76,7 +76,7 @@ randomsearch_xgb_oc_2 = function(){
 randomsearch_xgb_ps_2 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "binary:logistic",
                   max_depth = sample(3:10, 1),
@@ -101,7 +101,7 @@ randomsearch_xgb_ps_2 = function(){
 randomsearch_xgb_oc_3 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "reg:squarederror",
                   max_depth = sample(3:10, 1),
@@ -126,7 +126,7 @@ randomsearch_xgb_oc_3 = function(){
 randomsearch_xgb_ps_3 = function(){
   # randomly pick parameter values within defined boundaries
   parameters_list = list()
-  for (i in 1:100){
+  for (i in 1:500){
     param <- list(booster = "gbtree", # to account for non-linearities a tree based estimator is used
                   objective = "binary:logistic",
                   max_depth = sample(3:10, 1),
