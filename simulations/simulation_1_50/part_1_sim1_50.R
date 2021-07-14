@@ -88,7 +88,7 @@ colnames_sim = to("sim_", until = n_simulations, from = 1)
 db1_50 = dbConnect(SQLite(), dbname = file.path(folder, "db1_50"))
 
 # Hyperparameter Tuning for DGP 1
-hyperparams = hyperparam_tuning_1(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, smalltreat = FALSE)
+hyperparams = hyperparam_tuning_1_50(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, cv_folds, smalltreat = FALSE)
 ps_methods = hyperparams$ps_methods
 oc_methods = hyperparams$oc_methods
 
