@@ -83,7 +83,7 @@ for (j in 1:n_simulations) {
   ## 10/90 ##
   ###########
   # simulate data
-  data = generalDGP(n_covariates, n_observations, mu1, tau1, pi1, sigma = 1, smalltreat = TRUE)
+  data = generalDGP(n_covariates, n_observations, mu2, tau2, pi2, sigma = 1, smalltreat = TRUE)
   Y = data[[1]]
   D = data[[2]]
   X = data[[3]]
