@@ -212,7 +212,7 @@ hyperparam_tuning_2_10 = function(n_covariates, n_observations, mufunc, taufunc,
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
   grid_nn_oc = grid_keras_oc_2_10()
-  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = TRUE, optimizer = "adamax", learning_rate = 0.01)
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adamax", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
   grid_nn_ps = grid_keras_ps_2_10()
