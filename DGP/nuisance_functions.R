@@ -21,7 +21,7 @@ pi2 = function(X, w = 0){
 }
 
 
-pi3 = function(X, w){
+pi3 = function(X, w = 0){
   I_5 <- 1*(X[,5]>1)
   
   if (ncol(X) >= 6){
