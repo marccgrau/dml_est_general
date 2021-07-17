@@ -15,8 +15,8 @@ for i in {2..10..1}
 	
 	if [[ "$i" == "10" ]]
 	then
-	echo "Congratulations! Part $i of simulation 2 executed successfully. The simulation ended successfully."
+	echo "Congratulations! Part $i of simulation 3 executed successfully. The simulation ended successfully."
 	else 
-	echo "Congratulations! Part $i of simulation 2 executed successfully."
+	echo "Congratulations! Part $i of simulation 3 executed successfully."
 	fi
 done
