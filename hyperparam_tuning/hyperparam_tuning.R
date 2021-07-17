@@ -328,11 +328,11 @@ hyperparam_tuning_3_10 = function(n_covariates, n_observations, mufunc, taufunc,
   ## Neural Network Hyperparameters
   ### Potential outcome: Grid search algorithm
   grid_nn_oc = grid_keras_oc_3_10()
-  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "adamax", learning_rate = 0.01)
+  params_nn_oc = hyperparam_nnet_keras(Y, X, grid_nn_oc, twolayers = FALSE, optimizer = "sgd", learning_rate = 0.01)
   
   ### Propensity score: Grid search algorithm
   grid_nn_ps = grid_keras_ps_3_10()
-  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps, twolayers = FALSE, optimizer = "adamax", learning_rate = 0.01)
+  params_nn_ps = hyperparam_nnet_keras(D, X, grid_nn_ps, twolayers = TRUE, optimizer = "rmsprop", learning_rate = 0.01)
   
   # Setup the ml methods used in the ensemble for the estimation of the nuisance parameters
   # ML methods used for propensity score estimation

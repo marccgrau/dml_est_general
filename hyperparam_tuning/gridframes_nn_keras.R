@@ -170,8 +170,8 @@ grid_keras_ps_3_50 = function(){
 grid_keras_oc_3_10 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(64),
-    act.fct1 = c("relu"),
+    units1 = c(8),
+    act.fct1 = c("sigmoid"),
     act.fctfinal = NA,
     act.output = FALSE,
     loss.fct = "mse",
@@ -187,8 +187,10 @@ grid_keras_oc_3_10 = function(){
 grid_keras_ps_3_10 = function(){
   # define set of possible hyperparameters
   params_nn = list(
-    units1 = c(32),
+    units1 = c(16),
+    units2 = c(16),
     act.fct1 = c("sigmoid"),
+    act.fct2 = c("relu"),
     act.fctfinal = c("sigmoid"),
     loss.fct = "binary_crossentropy",
     eval.metric = "binary_crossentropy",
