@@ -1,5 +1,5 @@
 source activate tensorflow2_latest_p37
-
+source activate tensorflow2_latest_p37
 sudo amazon-linux-extras install R4
 
 
