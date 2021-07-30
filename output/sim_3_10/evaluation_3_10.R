@@ -610,10 +610,37 @@ extrafont::embed_fonts(pdf_file, outfile=pdf_file)
 rm(pdf_file)
 print("Plot has been saved as pdf.")
 
-# show correlation between input factors and true te
+# show correlation between confounders and true te
+
 data_corr_map = cbind.data.frame(data.table(true_te[1,]), x_example)
 colnames(data_corr_map) = c("TE", "X1", "X2", "X3", "X4", "X5", "X6", "X7",
                             "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15")
+
+
+data_corr_map_norms = data_corr_map %>% 
+  dplyr::select(c(TE, X1, X3, X5, X7, X9, X11, X13, X15)) %>%
+  gather(-TE, key = "var", value = "value")
+
+data_corr_map_bins = data_corr_map %>% 
+  dplyr::select(c(TE, X2, X4, X6, X8, X10, X12, X14)) %>%
+  gather(-TE, key = "var", value = "value")
+
+plot_norms = ggplot(data_corr_map_norms, aes(x = value, y = TE)) +
+  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
+  geom_line(alpha = 0.3) +
+  geom_point(alpha = 0.3) +
+  stat_smooth() + 
+  theme_bw(base_family = "serif") +
+  theme(text = element_text(size=12)) +
+  labs(x = "Confounders", y = "Treatment Effect")
+
+plot_bins = ggplot(data_corr_map_bins, aes(x = TE, y = value)) +
+  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
+  geom_point(alpha = 0.3) +
+  stat_smooth() + 
+  theme_bw(base_family = "serif") +
+  theme(text = element_text(size=12)) +
+  labs(x = "Treatment Effect", y = "Confounders")
 
 pdf_file = file.path(figure_path, paste0("corr_plot_3_10", ".pdf"))
 
@@ -622,16 +649,9 @@ pdf(file = pdf_file,   # The directory you want to save the file in
     family = "serif",
     fonts = "serif",
     width = 13,
-    height = 7)
+    height = 15)
 
-data_corr_map %>%
-  gather(-TE, key = "var", value = "value") %>% 
-  ggplot(aes(x = value, y = TE)) +
-  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
-  geom_point() +
-  stat_smooth() +
-  theme_bw(base_family = "serif") +
-  labs(x = "Input variables", y = "True Treatment Effect")
+grid.arrange(plot_norms, plot_bins, nrow = 2)
 
 dev.off()
 extrafont::embed_fonts(pdf_file, outfile=pdf_file)

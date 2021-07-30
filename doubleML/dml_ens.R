@@ -142,7 +142,7 @@ dml_ens = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods,
     
     se_mu = (se_mu_main + se_mu_aux)/2
     colnames(se_mu) = c("mu_1", "mu_0")
-    rownames(se_mu) = c("ensemble", "lasso", "xgb", "nn")
+    rownames(se_mu) = c(ml_methods)
     
     
     # calculate te(D, theta, eta) = (g(1,X) - g(0,X)) + D(Y - g(1,X))/p(x) + (1-D)(Y - g(0,X))/(1-p(x)) - theta
@@ -167,7 +167,7 @@ dml_ens = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods,
     se_te = do.call(rbind, lapply(te, FUN = function(x){sd(x)}))
 
     colnames(se_te) = c("se_te")
-    rownames(se_te) = c("ensemble", "lasso", "xgb", "nn")
+    rownames(se_te) = c(ml_methods)
     
     # same order for true te and true p, x, d, y
     true_te_ordered = c(true_te_main, true_te_aux)
@@ -180,8 +180,10 @@ dml_ens = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods,
     ate = mapply(function(x) mean(x), te, SIMPLIFY = FALSE)
     
     # extract weights of ensemble
-    w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
-    w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
+    if (length(ml_methods) > 2) {
+      w_ens_ps = colMeans(rbind(p_hat_main_ensemble$nnls_weights, p_hat_aux_ensemble$nnls_weights))
+      w_ens_oc = colMeans(rbind(y_hat_main_ensemble$nnls_weights, y_hat_aux_ensemble$nnls_weights))
+    }
     
     # estimated propensity scores and potential outcome of ensemble
     y_hat_ens = c(y_hat_main[[1]][,1], y_hat_aux[[1]][,1])

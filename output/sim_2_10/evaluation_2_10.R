@@ -242,14 +242,14 @@ ate_violin = ggplot(plot_data_ate_violin, aes(x=variable, y=value, fill = variab
         axis.ticks = element_line(colour = "darkgrey",
                                   size = 0.3),
         legend.title = element_blank(),
-        legend.position="bottom") +
+        legend.position="bottom", 
+        strip.text = element_blank()) +
+  facet_wrap(.~variable, scales = "free", nrow = 1, ncol = 4) +
   geom_violin(trim=TRUE, show.legend = FALSE) +
   geom_boxplot(width=0.12, show.legend = FALSE) +
   scale_fill_uchicago(palette = "light",
                       labels = c("Ensemble", "Lasso", "XGBoost", "Neural Network")) +
   geom_hline(yintercept = 0.5) + 
-  scale_y_continuous(limits = c(min(plot_data_ate_violin$value),max(plot_data_ate_violin$value)),
-                     expand = expansion(mult = c(0.1, 0.1))) +
   labs(x = NULL, y = "Average Treatment Effect") +
   scale_x_discrete(labels=c("ens" = "Ensemble", "lasso" = "Lasso",
                             "xgb" = "XGBoost", "nn" = "Neural Network"))
@@ -483,6 +483,13 @@ avgBIAS = rbind.data.frame(avgBIAS_ens, avgBIAS_lasso, avgBIAS_xgb, avgBIAS_nn)
 colnames(avgBIAS) = c("Bias")
 
 # average SD per replication
+SD_true = matrix(NA, ncol = 1, nrow = n_simulations)
+for (i in 1:n_simulations){
+  temp = data.table(true_te[i,])
+  mean_temp = mean(temp$V1)
+  SD_true[i] = sqrt(sum((temp - mean_temp)^2)/(nrow(temp) - 1))
+}
+
 SD_ens = matrix(NA, ncol = 1, nrow = n_simulations)
 for (i in 1:n_simulations){
   temp = data.table(te_ens[i,])
@@ -611,10 +618,37 @@ extrafont::embed_fonts(pdf_file, outfile=pdf_file)
 rm(pdf_file)
 print("Plot has been saved as pdf.")
 
-# show correlation between input factors and true te
+# show correlation between confounders and true te
+
 data_corr_map = cbind.data.frame(data.table(true_te[1,]), x_example)
 colnames(data_corr_map) = c("TE", "X1", "X2", "X3", "X4", "X5", "X6", "X7",
                             "X8", "X9", "X10", "X11", "X12", "X13", "X14", "X15")
+
+
+data_corr_map_norms = data_corr_map %>% 
+  dplyr::select(c(TE, X1, X3, X5, X7, X9, X11, X13, X15)) %>%
+  gather(-TE, key = "var", value = "value")
+
+data_corr_map_bins = data_corr_map %>% 
+  dplyr::select(c(TE, X2, X4, X6, X8, X10, X12, X14)) %>%
+  gather(-TE, key = "var", value = "value")
+
+plot_norms = ggplot(data_corr_map_norms, aes(x = value, y = TE)) +
+  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
+  geom_line(alpha = 0.3) +
+  geom_point(alpha = 0.3) +
+  stat_smooth() + 
+  theme_bw(base_family = "serif") +
+  theme(text = element_text(size=12)) +
+  labs(x = "Confounders", y = "Treatment Effect")
+
+plot_bins = ggplot(data_corr_map_bins, aes(x = TE, y = value)) +
+  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
+  geom_point(alpha = 0.3) +
+  stat_smooth() + 
+  theme_bw(base_family = "serif") +
+  theme(text = element_text(size=12)) +
+  labs(x = "Treatment Effect", y = "Confounders")
 
 pdf_file = file.path(figure_path, paste0("corr_plot_2_10", ".pdf"))
 
@@ -623,16 +657,9 @@ pdf(file = pdf_file,   # The directory you want to save the file in
     family = "serif",
     fonts = "serif",
     width = 13,
-    height = 7)
+    height = 15)
 
-data_corr_map %>%
-  gather(-TE, key = "var", value = "value") %>% 
-  ggplot(aes(x = value, y = TE)) +
-  facet_wrap(~ factor(var, levels = unique(var)), scales = "free") +
-  geom_point() +
-  stat_smooth() +
-  theme_bw(base_family = "serif") +
-  labs(x = "Input variables", y = "True Treatment Effect")
+grid.arrange(plot_norms, plot_bins, nrow = 2)
 
 dev.off()
 extrafont::embed_fonts(pdf_file, outfile=pdf_file)
@@ -805,3 +832,13 @@ jb_xgb = jb.norm.test(ate$xgb, nrepl = 500)
 jb_nn = jb.norm.test(ate$nn, nrepl = 500)
 
 jb_values_all = cbind.data.frame(ml_names, rbind.data.frame(jb_ens, jb_lasso, jb_xgb, jb_nn))
+
+
+# illustration of true_te to true_p
+plot_data_te_p = cbind.data.frame(data.table(true_te[1,]), data.table(true_p[1,]))
+colnames(plot_data_te_p) = c("TE", "Propensity")
+plot_data_te_p = plot_data_te_p[order(plot_data_te_p$Propensity),]
+
+plot_te_p = ggplot(plot_data_te_p, aes(x = Propensity, y = TE))+
+  geom_line() +
+  stat_smooth()
