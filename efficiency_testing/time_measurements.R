@@ -403,3 +403,4 @@ all_times = rbind.data.frame(times_1_10, times_1_50, times_2_10, times_2_50, tim
 output = cbind.data.frame(folders, all_times)
 colnames(output) = c("simulation", ml_methods)
 
+fwrite(output, file = "output/all_times.csv")
