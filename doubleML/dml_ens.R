@@ -191,14 +191,29 @@ dml_ens = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods,
     
     # define single output
     if (first_simulation == TRUE){
-      output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
-                    "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu,
-                    "te_true" = true_te_ordered, "p_true" = true_p_ordered,
-                    "x_ord" = x_ordered, "d_ord" = d_ordered, "y_ord" = y_ordered)
+      if (length(ml_methods) > 2) {
+        output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
+                      "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu,
+                      "te_true" = true_te_ordered, "p_true" = true_p_ordered,
+                      "x_ord" = x_ordered, "d_ord" = d_ordered, "y_ord" = y_ordered)
+      } else {
+        output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
+                      "se_te" = se_te, "se_po" = se_mu,
+                      "te_true" = true_te_ordered, "p_true" = true_p_ordered,
+                      "x_ord" = x_ordered, "d_ord" = d_ordered, "y_ord" = y_ordered)
+      }
+      
     } else {
-      output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
-                    "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu,
-                    "te_true" = true_te_ordered, "p_true" = true_p_ordered)
+      if (length(ml_methods) > 2) {
+        output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
+                      "w_ens_ps" = w_ens_ps, "w_ens_oc" = w_ens_oc, "se_te" = se_te, "se_po" = se_mu,
+                      "te_true" = true_te_ordered, "p_true" = true_p_ordered)
+      } else {
+        output = list("ate" = ate, "te" = te, "y_ens" = y_hat_ens, "p_ens" = p_hat_ens,
+                      "se_te" = se_te, "se_po" = se_mu,
+                      "te_true" = true_te_ordered, "p_true" = true_p_ordered)
+      }
+      
     }
     
     
