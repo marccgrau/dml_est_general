@@ -247,8 +247,8 @@ ate_violin = ggplot(plot_data_ate_violin, aes(x=variable, y=value, fill = variab
   facet_wrap(.~variable, scales = "free", nrow = 1, ncol = 4) +
   geom_violin(trim=TRUE, show.legend = FALSE) +
   geom_boxplot(width=0.12, show.legend = FALSE) +
-  scale_fill_uchicago(palette = "light",
-                      labels = c("Ensemble", "Lasso", "XGBoost", "Neural Network")) +
+  scale_fill_grey(start = 0.9, end = 0.9,
+                  labels = c("Ensemble", "Lasso", "XGBoost", "Neural Network")) +
   geom_hline(yintercept = 0.5) + 
   labs(x = NULL, y = "Average Treatment Effect") +
   scale_x_discrete(labels=c("ens" = "Ensemble", "lasso" = "Lasso",
@@ -524,38 +524,6 @@ avgSD_nn = round(mean(SD_nn), 2)
 
 avgSD = rbind.data.frame(avgSD_ens, avgSD_lasso, avgSD_xgb, avgSD_nn)
 colnames(avgSD) = c("SD")
-
-JB_ens = matrix(NA, ncol = 1, nrow = n_simulations)
-JB_test_ens = numeric(2000)
-for (i in 1:n_simulations){
-  temp = data.table(te_ens[i,])
-  JB_test_ens[i] = jb.norm.test(temp$V1, nrepl = 1)$p.value
-  JB_ens[i] = ifelse(JB_test_ens > 0.05, 1, 0)
-}
-
-JB_lasso = matrix(NA, ncol = 1, nrow = n_simulations)
-JB_test_lasso = numeric(2000)
-for (i in 1:n_simulations){
-  temp = data.table(te_lasso[i,])
-  JB_test_lasso[i] = jb.norm.test(temp$V1, nrepl = 1)$p.value
-  JB_lasso[i] = ifelse(JB_test_lasso > 0.05, 1, 0)
-}
-
-JB_xgb = matrix(NA, ncol = 1, nrow = n_simulations)
-JB_test_xgb = numeric(2000)
-for (i in 1:n_simulations){
-  temp = data.table(te_xgb[i,])
-  JB_test_xgb[i] = jb.norm.test(temp$V1, nrepl = 1)$p.value
-  JB_xgb[i] = ifelse(JB_test_xgb > 0.05, 1, 0)
-}
-
-JB_nn = matrix(NA, ncol = 1, nrow = n_simulations)
-JB_test_nn = numeric(2000)
-for (i in 1:n_simulations){
-  temp = data.table(te_nn[i,])
-  JB_test_nn[i] = jb.norm.test(temp$V1, nrepl = 1)$p.value
-  JB_nn[i] = ifelse(JB_test_nn > 0.05, 1, 0)
-}
 
 
 # put all metrics together

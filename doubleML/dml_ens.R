@@ -1,5 +1,5 @@
 dml_ens = function(y, d, x, true_p, true_te, ps_methods, oc_methods, ml_methods, ens_folds = 2, first_simulation = FALSE) {
-  # Double Machine Learning estimator using the efficient score function as introduced by Chernozhukov et al. (2018)
+  # Double Machine Learning estimator using the efficient score function as introduced by Chernozhukov et al. (2016)
   # Implementation inspired by Knaus DML for multiple treatments https://github.com/MCKnaus/dmlmt 
   # check if the given treatment vector is binary
   binary <- all(d %in% 0:1)

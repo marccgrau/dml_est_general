@@ -247,8 +247,8 @@ ate_violin = ggplot(plot_data_ate_violin, aes(x=variable, y=value, fill = variab
   facet_wrap(.~variable, scales = "free", nrow = 1, ncol = 4) +
   geom_violin(trim=TRUE, show.legend = FALSE) +
   geom_boxplot(width=0.12, show.legend = FALSE) +
-  scale_fill_uchicago(palette = "light",
-                      labels = c("Ensemble", "Lasso", "XGBoost", "Neural Network")) +
+  scale_fill_grey(start = 0.9, end = 0.9,
+                  labels = c("Ensemble", "Lasso", "XGBoost", "Neural Network")) +
   geom_hline(yintercept = 0.5) + 
   labs(x = NULL, y = "Average Treatment Effect") +
   scale_x_discrete(labels=c("ens" = "Ensemble", "lasso" = "Lasso",
